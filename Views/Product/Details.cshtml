@@ -9,7 +9,6 @@
     var previewSpecRows = Model.TechnicalSpecSections.SelectMany(section => section.Rows).Take(16).ToList();
     const int visibleReviewLimit = 2;
     var hasMoreReviews = Model.ReviewSummary.Reviews.Count > visibleReviewLimit;
-    var hasMoreQuestions = Model.QuestionAnswerSection.Threads.Count > Model.QuestionAnswerSection.VisibleThreadLimit;
     var productUrl = Url.Action("Details", "Product", new { slug = Model.Slug }) ?? $"/product/{Model.Slug}";
     var selectedColorPrice = selectedColor.Price.ToString(System.Globalization.CultureInfo.InvariantCulture);
 }
@@ -291,7 +290,7 @@
                                         }
                                     </div>
 
-                                    <a class="pd-related-image" href="#">
+                                    <a class="pd-related-image" href="@product.Url">
                                         <img src="@product.ImageUrl"
                                              alt="@product.ImageAlt"
                                              width="176"
@@ -299,7 +298,7 @@
                                              loading="lazy" />
                                     </a>
 
-                                    <h3><a href="#">@product.Name</a></h3>
+                                    <h3><a href="@product.Url">@product.Name</a></h3>
 
                                     <div class="pd-related-price">
                                         <strong>@ProductDetailViewModel.FormatPrice(product.CurrentPrice)</strong>
@@ -474,80 +473,8 @@
             </div>
         </section>
 
-        <section id="block-comment-cps" class="pd-section pd-qa-section" aria-labelledby="pd-qa-title">
-            <h2 id="pd-qa-title">@Model.QuestionAnswerSection.Title</h2>
-
-            <div class="comment-form">
-                <div class="pd-qa-mascot" aria-hidden="true">
-                    <img src="~/images/logo-techstore-icon.svg" alt="" width="70" height="74" />
-                </div>
-
-                <div class="pd-qa-form-body">
-                    <h3 class="comment-form-title">@Model.QuestionAnswerSection.FormTitle</h3>
-                    <p class="question-content">@Model.QuestionAnswerSection.Description</p>
-
-                    <div class="pd-qa-input-row">
-                        <textarea rows="1" placeholder="@Model.QuestionAnswerSection.Placeholder"></textarea>
-                        <button type="button">
-                            @Model.QuestionAnswerSection.SubmitLabel
-                            <svg aria-hidden="true"><use href="#hero-icon-chevron"></use></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="block-comment__box-list-comment">
-                @for (var threadIndex = 0; threadIndex < Model.QuestionAnswerSection.Threads.Count; threadIndex++)
-                {
-                    var thread = Model.QuestionAnswerSection.Threads[threadIndex];
-
-                    <article class="pd-qa-thread"
-                             data-qa-thread
-                             @(threadIndex >= Model.QuestionAnswerSection.VisibleThreadLimit ? "hidden" : null)>
-                        <div class="pd-qa-avatar" aria-hidden="true">@thread.Initial</div>
-
-                        <div class="pd-qa-content">
-                            <header>
-                                <strong>@thread.Author</strong>
-                                <time>@thread.TimeAgo</time>
-                            </header>
-
-                            <p>@thread.Question</p>
-
-                            <button class="pd-qa-reply-link" type="button">Phản hồi</button>
-
-                            @foreach (var reply in thread.Replies)
-                            {
-                                <div class="pd-qa-admin-reply">
-                                    <div class="pd-qa-admin-avatar" aria-hidden="true">
-                                        <img src="~/images/logo-techstore-icon.svg" alt="" width="24" height="26" />
-                                    </div>
-                                    <div>
-                                        <header>
-                                            <strong>@reply.Author</strong>
-                                            <span>@reply.Badge</span>
-                                            <time>@reply.TimeAgo</time>
-                                        </header>
-                                        <p>@reply.Content</p>
-                                        <button class="pd-qa-reply-link" type="button">Phản hồi</button>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </article>
-                }
-
-                @if (hasMoreQuestions)
-                {
-                    <div class="pd-qa-more">
-                        <button type="button" data-qa-show-more>
-                            Xem thêm @Model.QuestionAnswerSection.AdditionalCommentCount bình luận
-                            <svg aria-hidden="true"><use href="#hero-icon-chevron"></use></svg>
-                        </button>
-                    </div>
-                }
-            </div>
-        </section>
+        <partial name="~/Views/Shared/Sections/_QuestionAnswer.cshtml"
+                 model="Model.QuestionAnswerSection" />
     </div>
 
     <div id="teleport-modal" class="pd-spec-modal" data-spec-modal hidden>

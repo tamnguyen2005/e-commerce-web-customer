@@ -1,32 +1,35 @@
 using e_commerce_web_customer.Application.Contracts;
 using e_commerce_web_customer.Application.Services;
-using e_commerce_web_customer.Infrastructure.MockData;
 using e_commerce_web_customer.ViewModels.Cart;
 using Microsoft.AspNetCore.Mvc;
 
 namespace e_commerce_web_customer.Controllers;
 
-public sealed class CartController(CartSessionService cartSession, ICartItemValidator cartItemValidator) : Controller
+public sealed class CartController(
+    CartSessionService cartSession,
+    ICartItemValidator cartItemValidator,
+    ICartDemoDataProvider demoDataProvider) : Controller
 {
     [HttpGet]
-    public IActionResult Index(bool demo = false)
+    public async Task<IActionResult> Index(
+        bool demo = false,
+        CancellationToken cancellationToken = default)
     {
-        var model = demo
-            ? new CartIndexViewModel
-            {
-                Items = MockCartData.GetCartDemoItems()
-            }
-            : new CartIndexViewModel
-            {
-                Items = BuildCartItems(cartSession.Load())
-            };
+        var items = demo
+            ? await demoDataProvider.GetCartItemsAsync(cancellationToken)
+            : BuildCartItems(cartSession.Load());
 
-        return View(model);
+        return View(new CartIndexViewModel
+        {
+            Items = items
+        });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddItem([FromBody] CartSessionItem? item)
+    public async Task<IActionResult> AddItem(
+        [FromBody] CartSessionItem? item,
+        CancellationToken cancellationToken)
     {
         if (item is null)
         {
@@ -35,11 +38,13 @@ public sealed class CartController(CartSessionService cartSession, ICartItemVali
 
         try
         {
-            var validatedItem = await cartItemValidator.ValidateAsync(item);
+            var validatedItem = await cartItemValidator.ValidateAsync(
+                item,
+                cancellationToken);
             var items = cartSession.AddOrUpdate(validatedItem);
             return Ok(new { count = CountQuantity(items) });
         }
-        catch (Exception ex)
+        catch (CartItemValidationException ex)
         {
             return BadRequest(new { error = ex.Message });
         }
@@ -47,7 +52,9 @@ public sealed class CartController(CartSessionService cartSession, ICartItemVali
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> BuyNow([FromBody] CartSessionItem? item)
+    public async Task<IActionResult> BuyNow(
+        [FromBody] CartSessionItem? item,
+        CancellationToken cancellationToken)
     {
         if (item is null)
         {
@@ -56,7 +63,9 @@ public sealed class CartController(CartSessionService cartSession, ICartItemVali
 
         try
         {
-            var validatedItem = await cartItemValidator.ValidateAsync(item);
+            var validatedItem = await cartItemValidator.ValidateAsync(
+                item,
+                cancellationToken);
             cartSession.SaveBuyNow(validatedItem);
 
             var items = cartSession.Load(); // Main cart count doesn't change, we just need it for UI
@@ -66,7 +75,7 @@ public sealed class CartController(CartSessionService cartSession, ICartItemVali
                 redirectUrl = Url.Action("Index", "Checkout", new { mode = "buynow" })
             });
         }
-        catch (Exception ex)
+        catch (CartItemValidationException ex)
         {
             return BadRequest(new { error = ex.Message });
         }
@@ -74,7 +83,9 @@ public sealed class CartController(CartSessionService cartSession, ICartItemVali
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SaveSession([FromBody] List<CartSessionItem>? items)
+    public async Task<IActionResult> SaveSession(
+        [FromBody] List<CartSessionItem>? items,
+        CancellationToken cancellationToken)
     {
         if (items is null)
         {
@@ -92,9 +103,11 @@ public sealed class CartController(CartSessionService cartSession, ICartItemVali
         {
             try
             {
-                validatedItems.Add(await cartItemValidator.ValidateAsync(item));
+                validatedItems.Add(await cartItemValidator.ValidateAsync(
+                    item,
+                    cancellationToken));
             }
-            catch
+            catch (CartItemValidationException)
             {
                 // Skip invalid items
             }

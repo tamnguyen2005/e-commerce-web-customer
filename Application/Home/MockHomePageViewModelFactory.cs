@@ -12,11 +12,14 @@ public sealed class MockHomePageViewModelFactory : IHomePageViewModelFactory
         _categoryMenuProvider = categoryMenuProvider;
     }
 
-    public HomeIndexViewModel Create()
+    public async Task<HomeIndexViewModel> CreateAsync(
+        CancellationToken cancellationToken = default)
     {
+        var categoryMenu = await _categoryMenuProvider.GetMenuAsync(cancellationToken);
+
         return new HomeIndexViewModel
         {
-            Hero = HomeHeroViewModelFactory.Create(_categoryMenuProvider.GetMenu().Items),
+            Hero = HomeHeroViewModelFactory.Create(categoryMenu.Items),
             FeaturedCategorySections = [PhoneCategorySectionFactory.Create()],
             AccessoryDirectory = AccessoryDirectoryFactory.Create(),
             AdditionalCategorySections =

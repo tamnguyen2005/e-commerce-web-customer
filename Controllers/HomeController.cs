@@ -14,9 +14,10 @@ public class HomeController : Controller
         _homePageViewModelFactory = homePageViewModelFactory;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        return View(_homePageViewModelFactory.Create());
+        var model = await _homePageViewModelFactory.CreateAsync(cancellationToken);
+        return View(model);
     }
 
     public IActionResult Privacy()
