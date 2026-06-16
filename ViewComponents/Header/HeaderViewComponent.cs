@@ -35,6 +35,7 @@ public class HeaderViewComponent : ViewComponent
         var isLoggedIn = HttpContext.Session.GetString(SessionKeys.IsLoggedIn) == "true";
         var userEmail = HttpContext.Session.GetString(SessionKeys.UserEmail);
         var userDisplayName = HttpContext.Session.GetString(SessionKeys.UserDisplayName);
+        var userPhoneNumber = HttpContext.Session.GetString(SessionKeys.UserPhoneNumber);
         var search = await _searchSuggestionProvider.GetInitialSuggestionsAsync(
             cancellationToken);
         var categoryMenu = await _categoryMenuProvider.GetMenuAsync(
@@ -43,6 +44,7 @@ public class HeaderViewComponent : ViewComponent
             isLoggedIn,
             userEmail,
             userDisplayName,
+            userPhoneNumber,
             cancellationToken);
         var currentQuery = HttpContext.Request.Query["q"].ToString();
 

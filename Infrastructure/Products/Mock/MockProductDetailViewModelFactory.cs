@@ -118,16 +118,69 @@ public sealed class MockProductDetailViewModelFactory(
         var activeStorage = ResolveActiveStorage(slug);
         const decimal basePrice = 36_990_000m;
         const decimal oldPrice = 37_990_000m;
+        IReadOnlyList<ProductDetailColorOptionViewModel> colorOptions =
+        [
+            new()
+            {
+                Name = "Tím Cobalt",
+                ImageUrl = $"{PhoneImageRoot}/phone-violet-cutout.png",
+                ImageAlt = "iPhone 17 Pro Max màu tím cobalt",
+                Price = basePrice
+            },
+            new()
+            {
+                Name = "Đen Classic",
+                ImageUrl = $"{PhoneImageRoot}/phone-gaming-cutout.png",
+                ImageAlt = "iPhone 17 Pro Max màu đen classic",
+                Price = basePrice,
+                IsAvailable = false,
+                StockStatusText = "Hết hàng"
+            },
+            new()
+            {
+                Name = "Xanh Sky Blue",
+                ImageUrl = $"{PhoneImageRoot}/phone-camera-cutout.png",
+                ImageAlt = "iPhone 17 Pro Max màu xanh sky blue",
+                Price = basePrice
+            },
+            new()
+            {
+                Name = "Trắng Classic",
+                ImageUrl = $"{PhoneImageRoot}/phone-rose-cutout.png",
+                ImageAlt = "iPhone 17 Pro Max màu trắng classic",
+                Price = basePrice,
+                IsActive = true
+            }
+        ];
+        var activeColor = colorOptions.First(color => color.IsActive);
+        IReadOnlyList<ProductDetailGalleryItemViewModel> defaultGalleryItems =
+        [
+            new()
+            {
+                Label = "Ảnh thực tế",
+                ImageUrl = "/images/home/hero-smartphones.webp",
+                ImageAlt = "Ảnh thực tế các màu iPhone 17"
+            },
+            new()
+            {
+                Label = "Tính năng nổi bật",
+                ImageUrl = "/images/home/hero-smartphones.webp",
+                ImageAlt = "Các tính năng nổi bật của iPhone 17",
+                IsFeatureHighlight = true
+            }
+        ];
 
         return new ProductDetailViewModel
         {
             Slug = slug,
             Name = $"iPhone 17 Pro Max {activeStorage} | Chính hãng",
             Brand = "Apple",
-            MainImageUrl = $"{PhoneImageRoot}/phone-orange-cutout.png",
-            MainImageAlt = "iPhone 17 Pro Max màu cam vũ trụ",
+            MainImageUrl = activeColor.ImageUrl,
+            MainImageAlt = activeColor.ImageAlt,
             CurrentPrice = basePrice,
             OldPrice = oldPrice,
+            IsAvailable = activeColor.IsAvailable,
+            StockStatusText = activeColor.StockStatusText,
             Rating = 5m,
             ReviewCount = 34,
             Breadcrumbs =
@@ -145,46 +198,7 @@ public sealed class MockProductDetailViewModelFactory(
                 new() { Label = "Thông số", IconId = "hero-icon-phone" },
                 new() { Label = "So sánh", IconId = "hero-icon-swap" }
             ],
-            GalleryItems =
-            [
-                new()
-                {
-                    Label = "Cam Vũ Trụ",
-                    ImageUrl = $"{PhoneImageRoot}/phone-orange-cutout.png",
-                    ImageAlt = "iPhone 17 Pro Max màu cam vũ trụ"
-                },
-                new()
-                {
-                    Label = "Mặt trước",
-                    ImageUrl = $"{PhoneImageRoot}/phone-gaming-cutout.png",
-                    ImageAlt = "Mặt trước iPhone 17 Pro Max"
-                },
-                new()
-                {
-                    Label = "Camera",
-                    ImageUrl = $"{PhoneImageRoot}/phone-camera-cutout.png",
-                    ImageAlt = "Cụm camera iPhone 17 Pro Max"
-                },
-                new()
-                {
-                    Label = "Cạnh máy",
-                    ImageUrl = $"{PhoneImageRoot}/phone-rose-cutout.png",
-                    ImageAlt = "Cạnh máy iPhone 17 Pro Max"
-                },
-                new()
-                {
-                    Label = "Ảnh thực tế",
-                    ImageUrl = "/images/home/hero-smartphones.webp",
-                    ImageAlt = "Ảnh thực tế các màu iPhone 17"
-                },
-                new()
-                {
-                    Label = "Tính năng nổi bật",
-                    ImageUrl = "/images/home/hero-smartphones.webp",
-                    ImageAlt = "Các tính năng nổi bật của iPhone 17",
-                    IsFeatureHighlight = true
-                }
-            ],
+            GalleryItems = BuildGalleryItems(defaultGalleryItems, colorOptions),
             StorageOptions =
             [
                 Storage("iPhone 17 Pro Max 256GB", "/product/iphone-17-pro-max-256gb", slug),
@@ -195,43 +209,36 @@ public sealed class MockProductDetailViewModelFactory(
                 Storage("iPhone 17 256GB", "/product/iphone-17-256gb", slug, isInitiallyHidden: true),
                 Storage("iPhone 17 Plus 256GB", "/product/iphone-17-plus-256gb", slug, isInitiallyHidden: true)
             ],
-            ColorOptions =
+            ColorOptions = colorOptions,
+            VariantSpecRows =
             [
-                new()
-                {
-                    Name = "Tím Cobalt",
-                    ImageUrl = $"{PhoneImageRoot}/phone-violet-cutout.png",
-                    ImageAlt = "iPhone 17 Pro Max màu tím cobalt",
-                    Price = basePrice
-                },
-                new()
-                {
-                    Name = "Đen Classic",
-                    ImageUrl = $"{PhoneImageRoot}/phone-gaming-cutout.png",
-                    ImageAlt = "iPhone 17 Pro Max màu đen classic",
-                    Price = basePrice
-                },
-                new()
-                {
-                    Name = "Xanh Sky Blue",
-                    ImageUrl = $"{PhoneImageRoot}/phone-camera-cutout.png",
-                    ImageAlt = "iPhone 17 Pro Max màu xanh sky blue",
-                    Price = basePrice
-                },
-                new()
-                {
-                    Name = "Trắng Classic",
-                    ImageUrl = $"{PhoneImageRoot}/phone-rose-cutout.png",
-                    ImageAlt = "iPhone 17 Pro Max màu trắng classic",
-                    Price = basePrice,
-                    IsActive = true
-                }
+                Row("Bộ nhớ trong", activeStorage, isHighlighted: true)
             ],
             TechnicalSpecSections = CreateTechnicalSpecSections(activeStorage),
             RelatedProductGroups = CreateRelatedProductGroups(),
             ReviewSummary = CreateReviewSummary($"iPhone 17 Pro Max {activeStorage}"),
             QuestionAnswerSection = CreateQuestionAnswerSection(activeStorage)
         };
+    }
+
+    private static IReadOnlyList<ProductDetailGalleryItemViewModel> BuildGalleryItems(
+        IReadOnlyList<ProductDetailGalleryItemViewModel> defaultItems,
+        IReadOnlyList<ProductDetailColorOptionViewModel> colorOptions)
+    {
+        var variantItems = colorOptions
+            .OrderByDescending(color => color.IsActive)
+            .ThenBy(color => color.Name, StringComparer.CurrentCultureIgnoreCase)
+            .Select(color => new ProductDetailGalleryItemViewModel
+            {
+                Label = color.Name,
+                ImageUrl = color.ImageUrl,
+                ImageAlt = color.ImageAlt
+            });
+
+        return variantItems
+            .Concat(defaultItems)
+            .DistinctBy(item => item.ImageUrl, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private static ProductDetailStorageOptionViewModel Storage(

@@ -9,6 +9,7 @@ public sealed class HomeHeroViewModel
     public required IReadOnlyList<HomeHeroSlideViewModel> Slides { get; init; }
     public required IReadOnlyList<HomeHeroPromoTileViewModel> PromoTiles { get; init; }
     public required IReadOnlyList<HomeHeroBenefitGroupViewModel> BenefitGroups { get; init; }
+    public HeaderAccountViewModel Account { get; set; } = new();
 }
 
 public sealed class HomeHeroCampaignTabViewModel

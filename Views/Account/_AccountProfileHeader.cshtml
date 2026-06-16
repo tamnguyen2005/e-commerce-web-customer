@@ -1,0 +1,44 @@
+@model AccountProfileSummaryViewModel
+
+<section class="ap-member-card" aria-label="Thông tin thành viên">
+    <div class="ap-member-identity">
+        <span class="ap-avatar">
+            <img src="@Model.AvatarUrl" alt="@Model.FullName" width="58" height="58" />
+        </span>
+        <div class="ap-member-copy">
+            <h1>@Model.FullName</h1>
+            <div class="ap-phone-line">
+                <span>@Model.MaskedPhoneNumber</span>
+                <svg aria-hidden="true"><use href="#hero-icon-eye-off"></use></svg>
+            </div>
+            <p class="ap-refresh">
+                <svg aria-hidden="true"><use href="#profile-icon-clock"></use></svg>
+                @Model.RefreshDateText
+            </p>
+        </div>
+    </div>
+
+    <div class="ap-stat ap-stat--orders">
+        <span class="ap-stat-icon"><svg aria-hidden="true"><use href="#profile-icon-cart"></use></svg></span>
+        <div>
+            <strong>@Model.OrderCountText</strong>
+            <p>Tổng số đơn hàng đã mua</p>
+        </div>
+    </div>
+
+    <div class="ap-stat ap-stat--spend">
+        <span class="ap-stat-icon"><svg aria-hidden="true"><use href="#profile-icon-wallet"></use></svg></span>
+        <div>
+            <strong>@Model.TotalSpentText</strong>
+            <p>Tổng tiền tích lũy <span>@Model.AccumulationDateText</span></p>
+        </div>
+    </div>
+</section>
+
+<nav class="ap-shortcuts" aria-label="Tiện ích tài khoản">
+    <span class="ap-shortcut"><span><svg aria-hidden="true"><use href="#profile-icon-diamond"></use></svg></span>Hạng thành viên</span>
+    <span class="ap-shortcut"><span><svg aria-hidden="true"><use href="#profile-icon-coupon"></use></svg></span>Mã giảm giá</span>
+    <a class="ap-shortcut" asp-controller="Account" asp-action="Profile" asp-route-tab="@AccountProfileTabs.History"><span><svg aria-hidden="true"><use href="#profile-icon-receipt"></use></svg></span>Lịch sử mua hàng</a>
+    <span class="ap-shortcut"><span><svg aria-hidden="true"><use href="#profile-icon-pin"></use></svg></span>Sổ địa chỉ</span>
+    <span class="ap-shortcut"><span><svg aria-hidden="true"><use href="#profile-icon-link"></use></svg></span>Liên kết tài khoản</span>
+</nav>

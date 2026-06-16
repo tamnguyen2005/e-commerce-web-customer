@@ -60,7 +60,7 @@ public sealed class DbAccountService(
         var user = await FindUserByEmailAsync(normalizedEmail, asTracking: false, cancellationToken);
         return user is null
             ? null
-            : new AccountProfile(user.Email, ResolveDisplayName(user));
+            : new AccountProfile(user.Email, ResolveDisplayName(user), user.Phone);
     }
 
     public async Task<bool> RegisterAsync(

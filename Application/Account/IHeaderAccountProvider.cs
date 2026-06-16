@@ -8,5 +8,6 @@ public interface IHeaderAccountProvider
         bool isLoggedIn,
         string? email,
         string? displayName,
+        string? phoneNumber = null,
         CancellationToken cancellationToken = default);
 }

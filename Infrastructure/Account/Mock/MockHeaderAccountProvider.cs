@@ -53,6 +53,7 @@ public sealed class MockHeaderAccountProvider : IHeaderAccountProvider
         bool isLoggedIn,
         string? email,
         string? displayName,
+        string? phoneNumber = null,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -70,6 +71,7 @@ public sealed class MockHeaderAccountProvider : IHeaderAccountProvider
             DisplayName = ToButtonName(fullName),
             FullName = fullName,
             Email = email,
+            PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim(),
             Notifications = SampleNotifications
         });
     }
@@ -91,7 +93,7 @@ public sealed class MockHeaderAccountProvider : IHeaderAccountProvider
 
     private static string ToButtonName(string fullName)
     {
-        var firstPart = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-        return string.IsNullOrWhiteSpace(firstPart) ? fullName : firstPart;
+        var lastPart = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+        return string.IsNullOrWhiteSpace(lastPart) ? fullName : lastPart;
     }
 }

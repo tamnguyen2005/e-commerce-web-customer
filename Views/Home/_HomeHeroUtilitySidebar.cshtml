@@ -1,32 +1,64 @@
-@model IReadOnlyList<HomeHeroBenefitGroupViewModel>
+@model HomeHeroViewModel
+
+@{
+    var account = Model.Account;
+    var memberName = string.IsNullOrWhiteSpace(account.FullName)
+        ? account.DisplayName
+        : account.FullName;
+}
 
 <aside class="hero-utility-sidebar" aria-label="Ưu đãi thành viên">
-    <section class="hero-member-card hero-surface">
-        <div class="hero-member-intro">
-            <span class="hero-member-avatar">
-                <img src="~/images/logo-techstore-icon.svg" alt="" width="42" height="45" />
-            </span>
-            <div>
-                <p>Chào mừng bạn đến với</p>
-                <h2>TechStore</h2>
+    @if (account.IsLoggedIn)
+    {
+        <section class="hero-member-card hero-member-card--signed-in hero-surface">
+            <div class="hero-account-summary">
+                <a class="hero-account-name" href="/account/profile">@memberName</a>
+                @if (account.HasMaskedPhoneNumber)
+                {
+                    <div class="hero-account-phone">
+                        <span>@account.MaskedPhoneNumber</span>
+                        <svg class="hero-account-eye" aria-hidden="true">
+                            <use href="#hero-icon-eye-off"></use>
+                        </svg>
+                    </div>
+                }
             </div>
-        </div>
-        <p class="hero-member-copy">Đăng nhập để trải nghiệm ưu đãi dành riêng cho bạn.</p>
-        <div class="hero-member-actions">
-            <a href="/account/login">Đăng nhập</a>
-            <span aria-hidden="true"></span>
-            <a href="/account/register">Đăng ký</a>
-        </div>
-        <a class="hero-member-rewards" href="/account/profile">
-            <svg class="hero-ui-icon" aria-hidden="true"><use href="#hero-icon-gift"></use></svg>
-            <span>Xem ưu đãi thành viên</span>
-            <svg class="hero-ui-icon" aria-hidden="true"><use href="#hero-icon-chevron"></use></svg>
-        </a>
-    </section>
+            <a class="hero-member-rewards" href="/account/profile">
+                <svg class="hero-ui-icon" aria-hidden="true"><use href="#hero-icon-gift"></use></svg>
+                <span>Xem ưu đãi của bạn</span>
+                <svg class="hero-ui-icon" aria-hidden="true"><use href="#hero-icon-chevron"></use></svg>
+            </a>
+        </section>
+    }
+    else
+    {
+        <section class="hero-member-card hero-surface">
+            <div class="hero-member-intro">
+                <span class="hero-member-avatar">
+                    <img src="~/images/logo-techstore-icon.svg" alt="" width="42" height="45" />
+                </span>
+                <div>
+                    <p>Chào mừng bạn đến với</p>
+                    <h2>TechStore</h2>
+                </div>
+            </div>
+            <p class="hero-member-copy">Đăng nhập để trải nghiệm ưu đãi dành riêng cho bạn.</p>
+            <div class="hero-member-actions">
+                <a href="/account/login">Đăng nhập</a>
+                <span aria-hidden="true"></span>
+                <a href="/account/register">Đăng ký</a>
+            </div>
+            <a class="hero-member-rewards" href="/account/profile">
+                <svg class="hero-ui-icon" aria-hidden="true"><use href="#hero-icon-gift"></use></svg>
+                <span>Xem ưu đãi thành viên</span>
+                <svg class="hero-ui-icon" aria-hidden="true"><use href="#hero-icon-chevron"></use></svg>
+            </a>
+        </section>
+    }
 
     <section class="hero-benefits-panel hero-surface">
         <div class="hero-benefits-scroll">
-            @foreach (var group in Model)
+            @foreach (var group in Model.BenefitGroups)
             {
                 <div class="hero-benefit-group">
                     <h3>@group.Title</h3>

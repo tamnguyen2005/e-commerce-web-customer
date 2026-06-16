@@ -1,5 +1,6 @@
 using e_commerce_web_customer.Application.Contracts;
 using e_commerce_web_customer.Application.Constants;
+using e_commerce_web_customer.Application.Account;
 using e_commerce_web_customer.Application.Services;
 using e_commerce_web_customer.ViewModels.Account;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,8 @@ namespace e_commerce_web_customer.Controllers;
 
 public sealed class AccountController(
     IAccountService accountService,
+    IAccountProfilePageProvider accountProfilePageProvider,
+    IAccountOrderDetailProvider accountOrderDetailProvider,
     CartSessionService cartSession) : Controller
 {
     [HttpGet]
@@ -46,6 +49,14 @@ public sealed class AccountController(
             HttpContext.Session.SetString(
                 SessionKeys.UserDisplayName,
                 profile?.DisplayName ?? ResolveDisplayName(model.Email));
+            if (!string.IsNullOrWhiteSpace(profile?.PhoneNumber))
+            {
+                HttpContext.Session.SetString(SessionKeys.UserPhoneNumber, profile.PhoneNumber.Trim());
+            }
+            else
+            {
+                HttpContext.Session.Remove(SessionKeys.UserPhoneNumber);
+            }
 
             TempData["AuthSuccess"] = "Đăng nhập thành công! Chào mừng bạn quay lại TechStore.";
 
@@ -73,7 +84,58 @@ public sealed class AccountController(
         HttpContext.Session.Remove(SessionKeys.IsLoggedIn);
         HttpContext.Session.Remove(SessionKeys.UserEmail);
         HttpContext.Session.Remove(SessionKeys.UserDisplayName);
+        HttpContext.Session.Remove(SessionKeys.UserPhoneNumber);
         return RedirectToAction("Index", "Home");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Profile(
+        string? tab = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsLoggedIn())
+        {
+            var returnUrl = Url.Action(
+                nameof(Profile),
+                "Account",
+                new { tab = AccountProfileTabs.Normalize(tab) });
+            return RedirectToAction(nameof(Login), new { returnUrl });
+        }
+
+        var model = await accountProfilePageProvider.GetProfilePageAsync(
+            HttpContext.Session.GetString(SessionKeys.UserEmail),
+            HttpContext.Session.GetString(SessionKeys.UserDisplayName),
+            HttpContext.Session.GetString(SessionKeys.UserPhoneNumber),
+            AccountProfileTabs.Normalize(tab),
+            cancellationToken);
+
+        return View(model);
+    }
+
+    [HttpGet("account/orders/{code}")]
+    public async Task<IActionResult> OrderDetail(
+        string code,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsLoggedIn())
+        {
+            var returnUrl = Url.Action(
+                nameof(OrderDetail),
+                "Account",
+                new { code });
+            return RedirectToAction(nameof(Login), new { returnUrl });
+        }
+
+        var model = await accountOrderDetailProvider.GetOrderDetailAsync(
+            HttpContext.Session.GetString(SessionKeys.UserEmail),
+            HttpContext.Session.GetString(SessionKeys.UserDisplayName),
+            HttpContext.Session.GetString(SessionKeys.UserPhoneNumber),
+            code,
+            cancellationToken);
+
+        return model is null
+            ? NotFound()
+            : View(model);
     }
 
     [HttpGet]
@@ -153,5 +215,10 @@ public sealed class AccountController(
     private static string ResolveDisplayName(string email)
     {
         return email.Split('@', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? email;
+    }
+
+    private bool IsLoggedIn()
+    {
+        return HttpContext.Session.GetString(SessionKeys.IsLoggedIn) == "true";
     }
 }

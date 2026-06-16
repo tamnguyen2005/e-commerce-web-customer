@@ -1,0 +1,531 @@
+.order-detail-page {
+  min-height: 100vh;
+  padding: 6px 8px 28px;
+  background: #e4e4e7;
+  color: #030712;
+  font-family: "Inter", "Roboto", sans-serif;
+}
+
+.order-detail-shell {
+  display: grid;
+  width: 100%;
+  gap: 9px;
+  margin-inline: auto;
+}
+
+.order-detail-page .order-detail-shell {
+  width: min(100%, 768px);
+}
+
+.od-card,
+.od-breadcrumb {
+  background: #fff;
+  border-radius: 12px;
+}
+
+.od-breadcrumb {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px;
+  color: #c5c7d0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.od-breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: #030712;
+  text-decoration: none;
+}
+
+.od-breadcrumb svg {
+  width: 13px;
+  height: 13px;
+}
+
+.od-breadcrumb a:hover {
+  color: #e60012;
+}
+
+.od-breadcrumb strong {
+  color: #c5c7d0;
+  font-weight: 700;
+}
+
+.od-overview {
+  padding: 14px 12px 18px;
+}
+
+.od-overview h1,
+.od-info-card h2,
+.od-support-card h2,
+.od-payment-card h2 {
+  color: #030712;
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.od-order-meta {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  color: #71717a;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.od-order-meta strong {
+  color: #030712;
+  font-weight: 850;
+}
+
+.od-order-meta i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #d4d4d8;
+}
+
+.od-status {
+  display: inline-flex;
+  min-height: 18px;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.od-status--success {
+  background: #dcfce7;
+  color: #047857;
+}
+
+.od-status--pending {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+.od-status--danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.od-items {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.od-item {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.od-item img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.od-item-main {
+  min-width: 0;
+}
+
+.od-item-main h2 {
+  overflow: hidden;
+  color: #030712;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.od-item-main strong {
+  display: block;
+  margin-top: 2px;
+  color: #030712;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.od-item-main p {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  margin-top: 5px;
+  color: #030712;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.od-item-main p span {
+  display: inline-flex;
+  min-height: 16px;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: #f4f4f5;
+  color: #030712;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.od-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 10px;
+  color: #030712;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.od-item-actions strong {
+  font-weight: 850;
+}
+
+.od-item-actions button {
+  min-width: 62px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #e60012;
+  border-radius: 6px;
+  background: #fff;
+  color: #e60012;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.od-item-actions button:hover {
+  background: #fff1f2;
+}
+
+.od-stepper {
+  display: grid;
+  min-height: 62px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  padding: 10px clamp(28px, 22%, 198px) 12px;
+}
+
+.od-step {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  color: #030712;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.od-step::before {
+  position: absolute;
+  top: 7px;
+  right: 50%;
+  width: 100%;
+  height: 1px;
+  background: #6f6bff;
+  content: "";
+}
+
+.od-step:first-child::before {
+  display: none;
+}
+
+.od-step span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 13px;
+  height: 13px;
+  place-items: center;
+  border-radius: 50%;
+  background: #c9c9d2;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.od-step.is-done span,
+.od-step.is-done::before {
+  background: #6f6bff;
+}
+
+.od-step.is-done:last-child strong {
+  font-weight: 850;
+}
+
+.od-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+
+.od-left-column {
+  display: grid;
+  gap: 9px;
+}
+
+.od-info-card,
+.od-support-card,
+.od-payment-card {
+  padding: 14px 12px;
+}
+
+.od-info-list,
+.od-payment-section dl {
+  display: grid;
+}
+
+.od-info-list {
+  margin-top: 10px;
+}
+
+.od-info-list div {
+  display: grid;
+  min-height: 40px;
+  grid-template-columns: minmax(96px, 0.42fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #dedee4;
+}
+
+.od-info-list dt,
+.od-payment-section dt {
+  color: #71717a;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.od-info-list dd,
+.od-payment-section dd {
+  min-width: 0;
+  color: #030712;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.od-support-list {
+  display: grid;
+  margin-top: 11px;
+}
+
+.od-support-row {
+  display: grid;
+  min-height: 58px;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid #dedee4;
+}
+
+.od-support-row > svg {
+  width: 15px;
+  height: 15px;
+  color: #e60012;
+}
+
+.od-support-row span {
+  display: block;
+  color: #a1a1aa;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.od-support-row strong {
+  display: block;
+  margin-top: 2px;
+  color: #030712;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.od-support-row a {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #ffe5e7;
+  color: #e60012;
+  font-size: 10px;
+  font-weight: 750;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.od-support-row a svg,
+.od-zalo-link svg {
+  width: 12px;
+  height: 12px;
+}
+
+.od-zalo-link {
+  display: inline-flex;
+  width: max-content;
+  min-height: 50px;
+  align-items: center;
+  gap: 4px;
+  color: #030712;
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.od-zalo-link span {
+  display: inline-grid;
+  width: 20px;
+  height: 16px;
+  place-items: center;
+  border: 1px solid #6d5cff;
+  border-radius: 4px;
+  color: #6d5cff;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.od-zalo-link svg {
+  color: #e60012;
+}
+
+.od-payment-card {
+  min-height: 446px;
+}
+
+.od-payment-section {
+  margin-top: 10px;
+}
+
+.od-payment-section h3 {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: #f4f4f5;
+  color: #030712;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.od-payment-section div {
+  display: grid;
+  min-height: 42px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  border-bottom: 1px solid #dedee4;
+}
+
+.od-payment-section dd.is-discount,
+.od-payment-section dd.is-free {
+  color: #00b96b;
+}
+
+.od-payment-section dd.is-total {
+  color: #e60012;
+  font-weight: 900;
+}
+
+.od-payment-section small {
+  display: block;
+  margin-top: 2px;
+  color: #71717a;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+@media (max-width: 720px) {
+  .order-detail-page {
+    padding: 8px;
+  }
+
+  .od-breadcrumb {
+    display: none;
+  }
+
+  .od-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .od-stepper {
+    padding-inline: 18px;
+  }
+
+  .od-item {
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .od-item-main h2 {
+    white-space: normal;
+  }
+
+  .od-item-actions {
+    grid-column: 2;
+    justify-content: space-between;
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .od-overview,
+  .od-info-card,
+  .od-support-card,
+  .od-payment-card {
+    padding: 13px 11px;
+  }
+
+  .od-order-meta {
+    gap: 6px;
+  }
+
+  .od-step {
+    font-size: 11px;
+  }
+
+  .od-info-list div,
+  .od-support-row,
+  .od-payment-section div {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding-block: 10px;
+  }
+
+  .od-info-list dd,
+  .od-payment-section dd {
+    text-align: left;
+  }
+
+  .od-support-row a {
+    width: max-content;
+  }
+}

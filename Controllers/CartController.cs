@@ -51,6 +51,23 @@ public sealed class CartController(
         });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Count(CancellationToken cancellationToken = default)
+    {
+        var userEmail = GetLoggedInUserEmail();
+        var items = cartSession.Load();
+
+        if (items.Count == 0 && userEmail is not null)
+        {
+            items = await cartPersistenceService.LoadAsync(
+                userEmail,
+                cancellationToken);
+            cartSession.Save(items);
+        }
+
+        return Ok(new { count = CountQuantity(items) });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddItem(

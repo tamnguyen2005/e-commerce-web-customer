@@ -6,7 +6,14 @@
     var selectedColor = Model.ColorOptions.FirstOrDefault(color => color.IsActive) ?? Model.ColorOptions.First();
     var hasExtraVersions = Model.StorageOptions.Any(storage => storage.IsInitiallyHidden);
     var isExtraVersionActive = Model.StorageOptions.Any(storage => storage.IsInitiallyHidden && storage.IsActive);
-    var previewSpecRows = Model.TechnicalSpecSections.SelectMany(section => section.Rows).Take(16).ToList();
+    var highlightedSpecRows = Model.TechnicalSpecSections
+        .SelectMany(section => section.Rows)
+        .Where(row => row.IsHighlighted);
+    var previewSpecRows = Model.VariantSpecRows
+        .Concat(highlightedSpecRows)
+        .DistinctBy(row => row.Label, StringComparer.OrdinalIgnoreCase)
+        .Take(16)
+        .ToList();
     const int visibleReviewLimit = 2;
     var hasMoreReviews = Model.ReviewSummary.Reviews.Count > visibleReviewLimit;
     var productUrl = string.IsNullOrWhiteSpace(Model.CartItemId)
@@ -14,6 +21,19 @@
         : Url.Action("Details", "Product", new { slug = Model.Slug, variant = Model.CartItemId })
             ?? $"/product/{Model.Slug}?variant={Uri.EscapeDataString(Model.CartItemId)}";
     var selectedColorPrice = selectedColor.Price.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    var selectedVariantLabel = string.IsNullOrWhiteSpace(Model.SelectedVariantLabel)
+        ? selectedColor.Name
+        : Model.SelectedVariantLabel;
+    var selectedVariantAvailable = Model.IsAvailable && selectedColor.IsAvailable;
+    var selectedStockStatus = string.IsNullOrWhiteSpace(Model.StockStatusText)
+        ? selectedColor.StockStatusText
+        : Model.StockStatusText;
+    var selectedAvailabilityText = selectedVariantAvailable
+        ? selectedStockStatus
+        : $"Hết hàng: {selectedVariantLabel}";
+    var selectedAvailabilityNote = selectedVariantAvailable
+        ? "Sẵn sàng giao nhanh hoặc nhận tại cửa hàng."
+        : "Bạn vẫn có thể chọn biến thể này để xem ảnh và thông tin chi tiết.";
 }
 
 @section Styles {
@@ -97,6 +117,11 @@
                              height="520"
                              data-product-main-image />
 
+                        <button class="pd-gallery-open"
+                                type="button"
+                                data-gallery-open
+                                aria-label="Xem ảnh lớn"></button>
+
                         <button class="pd-gallery-arrow pd-gallery-arrow--next" type="button" data-gallery-next aria-label="Ảnh sau">
                             <svg aria-hidden="true"><use href="#hero-icon-chevron"></use></svg>
                         </button>
@@ -142,12 +167,28 @@
                     <div class="pd-storage-options">
                         @foreach (var storage in Model.StorageOptions)
                         {
-                            <a class="pd-storage-option @(storage.IsActive ? "is-active" : null)"
+                            var storageClass = string.Join(
+                                ' ',
+                                new[]
+                                {
+                                    "pd-storage-option",
+                                    storage.IsActive ? "is-active" : null,
+                                    storage.IsAvailable ? null : "is-unavailable"
+                                }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+                            <a class="@storageClass"
                                href="@storage.Url"
                                aria-current="@(storage.IsActive ? "true" : null)"
+                               aria-label="@($"{storage.Label} - {storage.StockStatusText}")"
                                data-extra-version="@storage.IsInitiallyHidden.ToString().ToLowerInvariant()"
+                               data-is-available="@storage.IsAvailable.ToString().ToLowerInvariant()"
+                               data-stock-status="@storage.StockStatusText"
                                @(storage.IsInitiallyHidden && !isExtraVersionActive ? "hidden" : null)>
                                 <span>@storage.Label</span>
+                                @if (!storage.IsAvailable)
+                                {
+                                    <small class="pd-option-stock">Hết hàng</small>
+                                }
                             </a>
                         }
 
@@ -170,17 +211,28 @@
                     <div class="pd-color-options">
                         @foreach (var color in Model.ColorOptions)
                         {
-                            <button class="pd-color-option @(color.IsActive ? "is-active" : null)"
+                            var colorClass = string.Join(
+                                ' ',
+                                new[]
+                                {
+                                    "pd-color-option",
+                                    color.IsActive ? "is-active" : null,
+                                    color.IsAvailable ? null : "is-unavailable"
+                                }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+                            <button class="@colorClass"
                                     type="button"
                                     data-color-option
                                     data-color-name="@color.Name"
-                                     data-image="@color.ImageUrl"
-                                     data-alt="@color.ImageAlt"
-                                     data-variant-key="@color.VariantKey"
-                                     data-variant-label="@color.VariantLabel"
-                                     data-detail-url="@color.DetailUrl"
-                                     data-price="@color.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                    data-image="@color.ImageUrl"
+                                    data-alt="@color.ImageAlt"
+                                    data-variant-key="@color.VariantKey"
+                                    data-variant-label="@color.VariantLabel"
+                                    data-detail-url="@color.DetailUrl"
+                                    data-price="@color.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                                     data-price-text="@ProductDetailViewModel.FormatPrice(color.Price)"
+                                    data-is-available="@color.IsAvailable.ToString().ToLowerInvariant()"
+                                    data-stock-status="@color.StockStatusText"
                                     aria-pressed="@(color.IsActive ? "true" : "false")">
                                 <img src="@color.ImageUrl"
                                      alt=""
@@ -189,15 +241,27 @@
                                      loading="lazy" />
                                 <span>
                                     <strong>@color.Name</strong>
-                                    <small>@ProductDetailViewModel.FormatPrice(color.Price)</small>
+                                    <small class="pd-color-price">@ProductDetailViewModel.FormatPrice(color.Price)</small>
+                                    @if (!color.IsAvailable)
+                                    {
+                                        <small class="pd-option-stock">Hết hàng</small>
+                                    }
                                 </span>
                             </button>
                         }
                     </div>
                 </section>
 
+                <div class="pd-stock-status @(selectedVariantAvailable ? null : "is-unavailable")"
+                     data-stock-status
+                     role="status"
+                     aria-live="polite">
+                    <strong data-stock-status-text>@selectedAvailabilityText</strong>
+                    <span data-stock-status-note>@selectedAvailabilityNote</span>
+                </div>
+
                 <div class="pd-cta-row">
-                    <a class="pd-buy-now"
+                    <a class="pd-buy-now @(selectedVariantAvailable ? null : "is-unavailable")"
                        asp-controller="Checkout"
                        asp-action="Index"
                        data-buy-now
@@ -206,13 +270,16 @@
                        data-cart-url="@productUrl"
                        data-cart-image="@selectedColor.ImageUrl"
                        data-cart-alt="@selectedColor.ImageAlt"
-                       data-cart-variant="@(string.IsNullOrWhiteSpace(Model.SelectedVariantLabel) ? selectedColor.Name : Model.SelectedVariantLabel)"
-                       data-cart-price="@selectedColorPrice">
+                       data-cart-variant="@selectedVariantLabel"
+                       data-cart-price="@selectedColorPrice"
+                       data-cart-available="@selectedVariantAvailable.ToString().ToLowerInvariant()"
+                       data-cart-stock-status="@selectedStockStatus"
+                       aria-disabled="@((!selectedVariantAvailable).ToString().ToLowerInvariant())">
                         <strong>MUA NGAY</strong>
                         <span>Giao nhanh từ 2 giờ hoặc nhận tại cửa hàng</span>
                     </a>
 
-                    <button class="pd-add-cart"
+                    <button class="pd-add-cart @(selectedVariantAvailable ? null : "is-unavailable")"
                             type="button"
                             data-add-to-cart
                             data-cart-id="@(string.IsNullOrWhiteSpace(Model.CartItemId) ? Model.Slug : Model.CartItemId)"
@@ -220,8 +287,11 @@
                             data-cart-url="@productUrl"
                             data-cart-image="@selectedColor.ImageUrl"
                             data-cart-alt="@selectedColor.ImageAlt"
-                            data-cart-variant="@(string.IsNullOrWhiteSpace(Model.SelectedVariantLabel) ? selectedColor.Name : Model.SelectedVariantLabel)"
-                            data-cart-price="@selectedColorPrice">
+                            data-cart-variant="@selectedVariantLabel"
+                            data-cart-price="@selectedColorPrice"
+                            data-cart-available="@selectedVariantAvailable.ToString().ToLowerInvariant()"
+                            data-cart-stock-status="@selectedStockStatus"
+                            aria-disabled="@((!selectedVariantAvailable).ToString().ToLowerInvariant())">
                         <svg aria-hidden="true"><use href="#hero-icon-cart"></use></svg>
                         <span>Thêm vào giỏ</span>
                     </button>
@@ -551,6 +621,34 @@
         </div>
     </div>
 
+    <div class="pd-gallery-modal" data-gallery-modal hidden>
+        <div class="pd-gallery-modal-card" role="dialog" aria-modal="true" aria-label="Xem ảnh sản phẩm">
+            <button class="pd-gallery-modal-close" type="button" data-gallery-close aria-label="Đóng ảnh">
+                <span aria-hidden="true">×</span>
+            </button>
+
+            <button class="pd-gallery-modal-arrow pd-gallery-modal-arrow--prev"
+                    type="button"
+                    data-gallery-modal-prev
+                    aria-label="Ảnh trước">
+                <svg aria-hidden="true"><use href="#hero-icon-chevron-left"></use></svg>
+            </button>
+
+            <img src="@Model.MainImageUrl"
+                 alt="@Model.MainImageAlt"
+                 width="980"
+                 height="760"
+                 data-gallery-modal-image />
+
+            <button class="pd-gallery-modal-arrow pd-gallery-modal-arrow--next"
+                    type="button"
+                    data-gallery-modal-next
+                    aria-label="Ảnh sau">
+                <svg aria-hidden="true"><use href="#hero-icon-chevron"></use></svg>
+            </button>
+        </div>
+    </div>
+
     <div class="pd-sticky-order" data-sticky-order aria-hidden="true">
         <div class="pd-sticky-product">
             <img src="@selectedColor.ImageUrl"
@@ -573,7 +671,7 @@
                 }
             </div>
 
-            <a class="pd-sticky-buy"
+            <a class="pd-sticky-buy @(selectedVariantAvailable ? null : "is-unavailable")"
                asp-controller="Checkout"
                asp-action="Index"
                data-buy-now
@@ -582,10 +680,13 @@
                data-cart-url="@productUrl"
                data-cart-image="@selectedColor.ImageUrl"
                data-cart-alt="@selectedColor.ImageAlt"
-               data-cart-variant="@(string.IsNullOrWhiteSpace(Model.SelectedVariantLabel) ? selectedColor.Name : Model.SelectedVariantLabel)"
-               data-cart-price="@selectedColorPrice">Mua Ngay</a>
+               data-cart-variant="@selectedVariantLabel"
+               data-cart-price="@selectedColorPrice"
+               data-cart-available="@selectedVariantAvailable.ToString().ToLowerInvariant()"
+               data-cart-stock-status="@selectedStockStatus"
+               aria-disabled="@((!selectedVariantAvailable).ToString().ToLowerInvariant())">Mua Ngay</a>
 
-            <button class="pd-sticky-cart"
+            <button class="pd-sticky-cart @(selectedVariantAvailable ? null : "is-unavailable")"
                     type="button"
                     data-add-to-cart
                     data-cart-id="@(string.IsNullOrWhiteSpace(Model.CartItemId) ? Model.Slug : Model.CartItemId)"
@@ -593,8 +694,11 @@
                     data-cart-url="@productUrl"
                     data-cart-image="@selectedColor.ImageUrl"
                     data-cart-alt="@selectedColor.ImageAlt"
-                    data-cart-variant="@(string.IsNullOrWhiteSpace(Model.SelectedVariantLabel) ? selectedColor.Name : Model.SelectedVariantLabel)"
+                    data-cart-variant="@selectedVariantLabel"
                     data-cart-price="@selectedColorPrice"
+                    data-cart-available="@selectedVariantAvailable.ToString().ToLowerInvariant()"
+                    data-cart-stock-status="@selectedStockStatus"
+                    aria-disabled="@((!selectedVariantAvailable).ToString().ToLowerInvariant())"
                     aria-label="Thêm vào giỏ">
                 <svg aria-hidden="true"><use href="#hero-icon-cart"></use></svg>
             </button>

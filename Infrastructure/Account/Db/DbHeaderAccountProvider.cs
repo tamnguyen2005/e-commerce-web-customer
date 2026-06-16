@@ -11,6 +11,7 @@ public sealed class DbHeaderAccountProvider(
         bool isLoggedIn,
         string? email,
         string? displayName,
+        string? phoneNumber = null,
         CancellationToken cancellationToken = default)
     {
         if (!isLoggedIn)
@@ -22,6 +23,9 @@ public sealed class DbHeaderAccountProvider(
         var resolvedDisplayName = string.IsNullOrWhiteSpace(displayName)
             ? resolvedEmail ?? "Thành viên"
             : displayName.Trim();
+        var resolvedPhoneNumber = string.IsNullOrWhiteSpace(phoneNumber)
+            ? null
+            : phoneNumber.Trim();
 
         if (string.IsNullOrWhiteSpace(resolvedEmail))
         {
@@ -29,19 +33,21 @@ public sealed class DbHeaderAccountProvider(
             {
                 IsLoggedIn = true,
                 DisplayName = ToButtonName(resolvedDisplayName),
-                FullName = resolvedDisplayName
+                FullName = resolvedDisplayName,
+                PhoneNumber = resolvedPhoneNumber
             });
         }
 
         return headerAccountDataService.GetAccountAsync(
             resolvedEmail,
             resolvedDisplayName,
+            resolvedPhoneNumber,
             cancellationToken);
     }
 
     private static string ToButtonName(string fullName)
     {
-        var firstPart = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-        return string.IsNullOrWhiteSpace(firstPart) ? fullName : firstPart;
+        var lastPart = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+        return string.IsNullOrWhiteSpace(lastPart) ? fullName : lastPart;
     }
 }

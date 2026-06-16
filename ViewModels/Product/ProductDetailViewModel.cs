@@ -14,6 +14,8 @@ public sealed class ProductDetailViewModel
     public required string MainImageAlt { get; init; }
     public decimal CurrentPrice { get; init; }
     public decimal? OldPrice { get; init; }
+    public bool IsAvailable { get; init; } = true;
+    public string StockStatusText { get; init; } = "Còn hàng";
     public decimal Rating { get; init; }
     public int ReviewCount { get; init; }
     public required IReadOnlyList<ProductDetailBreadcrumbViewModel> Breadcrumbs { get; init; }
@@ -21,6 +23,7 @@ public sealed class ProductDetailViewModel
     public required IReadOnlyList<ProductDetailGalleryItemViewModel> GalleryItems { get; init; }
     public required IReadOnlyList<ProductDetailStorageOptionViewModel> StorageOptions { get; init; }
     public required IReadOnlyList<ProductDetailColorOptionViewModel> ColorOptions { get; init; }
+    public IReadOnlyList<ProductTechnicalSpecRowViewModel> VariantSpecRows { get; init; } = [];
     public required IReadOnlyList<ProductTechnicalSpecSectionViewModel> TechnicalSpecSections { get; init; }
     public required IReadOnlyList<ProductRelatedProductGroupViewModel> RelatedProductGroups { get; init; }
     public required ProductReviewSummaryViewModel ReviewSummary { get; init; }
@@ -61,6 +64,8 @@ public sealed class ProductDetailStorageOptionViewModel
     public required string Url { get; init; }
     public bool IsActive { get; init; }
     public bool IsInitiallyHidden { get; init; }
+    public bool IsAvailable { get; init; } = true;
+    public string StockStatusText { get; init; } = "Còn hàng";
 }
 
 public sealed class ProductDetailColorOptionViewModel
@@ -73,6 +78,8 @@ public sealed class ProductDetailColorOptionViewModel
     public required string ImageAlt { get; init; }
     public decimal Price { get; init; }
     public bool IsActive { get; init; }
+    public bool IsAvailable { get; init; } = true;
+    public string StockStatusText { get; init; } = "Còn hàng";
 }
 
 public sealed class ProductTechnicalSpecSectionViewModel

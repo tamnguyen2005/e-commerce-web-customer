@@ -1,0 +1,194 @@
+@model AccountOrderDetailViewModel
+
+@{
+    ViewData["Title"] = $"Chi tiết đơn hàng {Model.OrderCode}";
+    ViewData["MetaDescription"] = $"Theo dõi thông tin chi tiết của đơn hàng {Model.OrderCode}.";
+}
+
+<section class="account-profile-page">
+    <div class="account-profile-shell">
+        <partial name="_AccountProfileHeader" model="Model.Summary" />
+
+        <div class="ap-layout">
+            <partial name="_AccountProfileSidebar" model="AccountProfileTabs.History" />
+
+            <div class="ap-main">
+                <div class="order-detail-shell">
+                    <nav class="od-breadcrumb" aria-label="Đường dẫn">
+                        <a asp-controller="Account" asp-action="Profile" asp-route-tab="@AccountProfileTabs.History">
+                            <svg aria-hidden="true"><use href="#hero-icon-chevron-left"></use></svg>
+                            Lịch sử mua hàng
+                        </a>
+                        <span aria-hidden="true">/</span>
+                        <strong>Chi tiết đơn hàng</strong>
+                    </nav>
+
+                    <section class="od-card od-overview" aria-labelledby="order-overview-title">
+                        <h1 id="order-overview-title">Tổng quan</h1>
+                        <div class="od-order-meta">
+                            <span>Đơn hàng: <strong>@Model.OrderCode</strong></span>
+                            <i aria-hidden="true"></i>
+                            <span>Ngày đặt hàng: <strong>@Model.OrderedDateText</strong></span>
+                            <i aria-hidden="true"></i>
+                            <mark class="od-status od-status--@Model.StatusTone">@Model.StatusText</mark>
+                        </div>
+
+                        <div class="od-items">
+                            @foreach (var item in Model.Items)
+                            {
+                                <article class="od-item">
+                                    <img src="@item.ProductImageUrl" alt="@item.ProductImageAlt" width="42" height="42" loading="lazy" />
+                                    <div class="od-item-main">
+                                        <h2>@item.ProductName</h2>
+                                        <strong>@item.UnitPriceText</strong>
+                                        @if (!string.IsNullOrWhiteSpace(item.ColorText))
+                                        {
+                                            <p><span>@item.ColorText</span> @item.WarrantyText</p>
+                                        }
+                                        else
+                                        {
+                                            <p>@item.WarrantyText</p>
+                                        }
+                                    </div>
+                                    <div class="od-item-actions">
+                                        <span>Số lượng: <strong>@item.Quantity</strong></span>
+                                        <button type="button">Mua lại</button>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    </section>
+
+                    <section class="od-card od-stepper" aria-label="Trạng thái đơn hàng">
+                        @for (var index = 0; index < Model.Steps.Count; index++)
+                        {
+                            var step = Model.Steps[index];
+                            <div class="od-step @(step.IsDone ? "is-done" : null)">
+                                <span>@(step.IsDone ? "✓" : (index + 1).ToString())</span>
+                                <strong>@step.Label</strong>
+                            </div>
+                        }
+                    </section>
+
+                    <div class="od-detail-grid">
+                        <div class="od-left-column">
+                            <section class="od-card od-info-card" aria-labelledby="order-customer-title">
+                                <h2 id="order-customer-title">Thông tin khách hàng</h2>
+                                <dl class="od-info-list">
+                                    <div>
+                                        <dt>Họ và tên:</dt>
+                                        <dd>@Model.Customer.FullName</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Số điện thoại:</dt>
+                                        <dd>@Model.Customer.PhoneNumber</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Địa chỉ:</dt>
+                                        <dd>@Model.Customer.AddressText</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Ghi chú:</dt>
+                                        <dd>@Model.Customer.NoteText</dd>
+                                    </div>
+                                </dl>
+                            </section>
+
+                            <section class="od-card od-support-card" aria-labelledby="order-support-title">
+                                <h2 id="order-support-title">Thông tin hỗ trợ</h2>
+                                <div class="od-support-list">
+                                    <div class="od-support-row">
+                                        <svg aria-hidden="true"><use href="#profile-icon-pin"></use></svg>
+                                        <div>
+                                            <span>Địa chỉ cửa hàng:</span>
+                                            <strong>@Model.Support.StoreAddress</strong>
+                                        </div>
+                                        <a href="https://www.google.com/maps/search/?api=1&query=@Uri.EscapeDataString(Model.Support.StoreAddress)" target="_blank" rel="noopener">
+                                            <svg aria-hidden="true"><use href="#profile-icon-pin"></use></svg>
+                                            Chỉ đường
+                                        </a>
+                                    </div>
+                                    <div class="od-support-row">
+                                        <svg aria-hidden="true"><use href="#hero-icon-phone"></use></svg>
+                                        <div>
+                                            <span>Số điện thoại:</span>
+                                            <strong>@Model.Support.StorePhone</strong>
+                                        </div>
+                                        <a href="tel:@Model.Support.StorePhone">
+                                            <svg aria-hidden="true"><use href="#hero-icon-phone"></use></svg>
+                                            Liên hệ
+                                        </a>
+                                    </div>
+                                    <a class="od-zalo-link" href="@Model.Support.ZaloUrl" target="_blank" rel="noopener">
+                                        <span>Zalo</span>
+                                        Liên hệ qua Zalo
+                                        <svg aria-hidden="true"><use href="#profile-icon-external"></use></svg>
+                                    </a>
+                                </div>
+                            </section>
+                        </div>
+
+                        <section class="od-card od-payment-card" aria-labelledby="order-payment-title">
+                            <h2 id="order-payment-title">Thông tin thanh toán</h2>
+                            <div class="od-payment-section">
+                                <h3>Sản phẩm</h3>
+                                <dl>
+                                    <div>
+                                        <dt>Số lượng sản phẩm:</dt>
+                                        <dd>@Model.Payment.ProductQuantity</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Tổng tiền hàng:</dt>
+                                        <dd>@Model.Payment.SubtotalText</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Giảm giá:</dt>
+                                        <dd class="@(Model.Payment.HasDiscount ? "is-discount" : null)">@Model.Payment.DiscountText</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Phí vận chuyển:</dt>
+                                        <dd class="@(Model.Payment.IsFreeShipping ? "is-free" : null)">@Model.Payment.ShippingFeeText</dd>
+                                    </div>
+                                </dl>
+                            </div>
+
+                            <div class="od-payment-section od-payment-section--total">
+                                <h3>Thanh toán</h3>
+                                <dl>
+                                    <div>
+                                        <dt>
+                                            Tổng số tiền
+                                            <small>(Đã bao gồm VAT và được làm tròn)</small>
+                                        </dt>
+                                        <dd class="is-total">@Model.Payment.TotalText</dd>
+                                    </div>
+                                    <div>
+                                        <dt>
+                                            Tổng số tiền đã thanh toán
+                                            <small>(Đã thanh toán trước)</small>
+                                        </dt>
+                                        <dd>@Model.Payment.PaidText</dd>
+                                    </div>
+                                    <div>
+                                        <dt>
+                                            Tổng số tiền còn lại
+                                            <small>(Cần phải thanh toán thêm)</small>
+                                        </dt>
+                                        <dd class="is-total">@Model.Payment.RemainingText</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_AccountProfileMobileNav" model="AccountProfileTabs.History" />
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/account-profile.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/pages/account-order-detail.css" asp-append-version="true" />
+}

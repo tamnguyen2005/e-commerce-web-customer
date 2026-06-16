@@ -1,0 +1,28 @@
+@model string
+
+@{
+    var isOverview = string.Equals(Model, AccountProfileTabs.Overview, StringComparison.OrdinalIgnoreCase);
+    var isHistory = string.Equals(Model, AccountProfileTabs.History, StringComparison.OrdinalIgnoreCase);
+    var isInfo = string.Equals(Model, AccountProfileTabs.Info, StringComparison.OrdinalIgnoreCase);
+}
+
+<nav class="ap-mobile-nav" aria-label="Điều hướng tài khoản trên di động">
+    <a class="@(isOverview ? "is-active" : null)" asp-controller="Account" asp-action="Profile" asp-route-tab="@AccountProfileTabs.Overview">
+        <svg aria-hidden="true"><use href="#profile-icon-home"></use></svg>
+        Tổng quan
+    </a>
+    <a class="@(isHistory ? "is-active" : null)" asp-controller="Account" asp-action="Profile" asp-route-tab="@AccountProfileTabs.History">
+        <svg aria-hidden="true"><use href="#profile-icon-receipt"></use></svg>
+        Đơn hàng
+    </a>
+    <a class="@(isInfo ? "is-active" : null)" asp-controller="Account" asp-action="Profile" asp-route-tab="@AccountProfileTabs.Info">
+        <svg aria-hidden="true"><use href="#profile-icon-gear"></use></svg>
+        Tài khoản
+    </a>
+    <form asp-controller="Account" asp-action="Logout" method="post">
+        <button type="submit">
+            <svg aria-hidden="true"><use href="#profile-icon-logout"></use></svg>
+            Đăng xuất
+        </button>
+    </form>
+</nav>

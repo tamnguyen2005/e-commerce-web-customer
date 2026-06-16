@@ -5,11 +5,6 @@
      data-sectioned-catalog>
     <partial name="~/Views/Catalog/Partials/_SectionedDiscovery.cshtml" model="Model" />
 
-    @if (Model.HotSale.Products.Count > 0)
-    {
-        <partial name="~/Views/Catalog/Partials/_HotSale.cshtml" model="Model.HotSale" />
-    }
-
     <partial name="~/Views/Catalog/Partials/_SectionNavigation.cshtml" model="Model" />
     <partial name="~/Views/Catalog/Partials/_SectionedProductSections.cshtml" model="Model" />
     <partial name="~/Views/Catalog/Partials/_SeoContent.cshtml" model="Model.SeoContent" />

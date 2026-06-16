@@ -62,7 +62,7 @@ public sealed class MockAccountService : IAccountService
 
             return Task.FromResult(user is null
                 ? null
-                : new AccountProfile(user.Email, user.FullName));
+                : new AccountProfile(user.Email, user.FullName, user.PhoneNumber));
         }
     }
 

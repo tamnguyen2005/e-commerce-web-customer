@@ -62,6 +62,8 @@ public sealed class DbProductDetailDataService(EcommerceDbContext dbContext) : I
             .OrderBy(product => product.Id)
             .ToListAsync(cancellationToken);
 
+        familyProducts = FilterProductsBySeries(familyProducts, seedProduct);
+
         var selectedProduct = familyProducts.FirstOrDefault(product => product.Id == seedProduct.Id);
         if (selectedProduct is null)
         {
@@ -97,7 +99,8 @@ public sealed class DbProductDetailDataService(EcommerceDbContext dbContext) : I
         var colorVariants = selectedVersionGroup?.Variants
             ?? [selectedVariant];
         var detailName = BuildDetailName(selectedProduct, selectedVariant);
-        var selectedImage = GetPrimaryImage(selectedVariant);
+        var imageVariant = ResolveImageVariant(selectedVariant, colorVariants);
+        var selectedImage = GetPrimaryImage(imageVariant);
         var mainImageUrl = NormalizeImageUrl(selectedImage?.ImagePath);
 
         return new ProductDetailViewModel
@@ -108,16 +111,19 @@ public sealed class DbProductDetailDataService(EcommerceDbContext dbContext) : I
             Name = detailName,
             Brand = selectedProduct.Brand?.Name ?? string.Empty,
             MainImageUrl = mainImageUrl,
-            MainImageAlt = BuildImageAlt(selectedImage, detailName, selectedVariant),
+            MainImageAlt = BuildImageAlt(selectedImage, detailName, imageVariant),
             CurrentPrice = selectedVariant.Price,
             OldPrice = null,
+            IsAvailable = selectedVariant.Quantity > 0,
+            StockStatusText = BuildStockStatusText(selectedVariant),
             Rating = selectedProduct.RatingAverage,
             ReviewCount = selectedProduct.RatingCount,
             Breadcrumbs = BuildBreadcrumbs(selectedProduct, detailName),
             QuickLinks = BuildQuickLinks(),
-            GalleryItems = BuildGalleryItems(selectedVariant, detailName),
+            GalleryItems = BuildGalleryItems(selectedVariant, colorVariants, detailName),
             StorageOptions = BuildStorageOptions(versionGroups, selectedVersionKey, selectedVariant),
             ColorOptions = BuildColorOptions(selectedProduct, colorVariants, selectedVariant, detailName),
+            VariantSpecRows = BuildVariantSpecRows(selectedVariant),
             TechnicalSpecSections = BuildTechnicalSpecSections(selectedProduct, detailName),
             RelatedProductGroups = BuildRelatedProductGroups(versionGroups, selectedVersionKey, selectedVariant),
             ReviewSummary = BuildReviewSummary(detailName, selectedProduct.RatingAverage, selectedProduct.RatingCount),
@@ -174,6 +180,67 @@ public sealed class DbProductDetailDataService(EcommerceDbContext dbContext) : I
             .ThenBy(group => group.Key.RamSize)
             .ThenBy(group => group.Key.StorageLabel)
             .ToList();
+    }
+
+    private static List<Product> FilterProductsBySeries(
+        IReadOnlyList<Product> products,
+        Product seedProduct)
+    {
+        var seedSeriesKey = ResolveProductSeriesKey(seedProduct);
+        if (seedSeriesKey is null)
+        {
+            return products.ToList();
+        }
+
+        var sameSeriesProducts = products
+            .Where(product => string.Equals(
+                ResolveProductSeriesKey(product),
+                seedSeriesKey,
+                StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return sameSeriesProducts.Count > 0
+            ? sameSeriesProducts
+            : products.ToList();
+    }
+
+    private static string? ResolveProductSeriesKey(Product product)
+    {
+        var normalizedText = RemoveDiacritics($"{product.Slug} {product.Name}")
+            .ToLowerInvariant();
+
+        var iphoneMatch = Regex.Match(
+            normalizedText,
+            @"\biphone[\s-]*(?<generation>\d{1,2})(?:e)?\b",
+            RegexOptions.IgnoreCase);
+        if (iphoneMatch.Success)
+        {
+            return $"iphone-{iphoneMatch.Groups["generation"].Value}";
+        }
+
+        var galaxySMatch = Regex.Match(
+            normalizedText,
+            @"\bgalaxy[\s-]*s(?<generation>\d{1,3})\b",
+            RegexOptions.IgnoreCase);
+        if (galaxySMatch.Success)
+        {
+            return $"galaxy-s{galaxySMatch.Groups["generation"].Value}";
+        }
+
+        return null;
+    }
+
+    private static ProductVariant ResolveImageVariant(
+        ProductVariant selectedVariant,
+        IReadOnlyList<ProductVariant> colorVariants)
+    {
+        if (GetPrimaryImage(selectedVariant) is not null)
+        {
+            return selectedVariant;
+        }
+
+        return colorVariants.FirstOrDefault(variant => GetPrimaryImage(variant) is not null)
+            ?? selectedVariant;
     }
 
     private static VersionKey BuildVersionKey(ProductVariant variant)
@@ -243,7 +310,9 @@ public sealed class DbProductDetailDataService(EcommerceDbContext dbContext) : I
                     Label = BuildVersionLabel(group.Product, group.Key),
                     Url = BuildVariantDetailUrl(group.Product, targetVariant),
                     IsActive = group.Key.Equals(selectedVersionKey),
-                    IsInitiallyHidden = false
+                    IsInitiallyHidden = false,
+                    IsAvailable = targetVariant.Quantity > 0,
+                    StockStatusText = BuildStockStatusText(targetVariant)
                 };
             })
             .ToList();
@@ -292,25 +361,69 @@ public sealed class DbProductDetailDataService(EcommerceDbContext dbContext) : I
                     ImageUrl = NormalizeImageUrl(image?.ImagePath),
                     ImageAlt = BuildImageAlt(image, detailName, variant),
                     Price = variant.Price,
-                    IsActive = variant.Id == selectedVariant.Id
+                    IsActive = variant.Id == selectedVariant.Id,
+                    IsAvailable = variant.Quantity > 0,
+                    StockStatusText = BuildStockStatusText(variant)
                 };
             })
             .ToList();
     }
 
+    private static IReadOnlyList<ProductTechnicalSpecRowViewModel> BuildVariantSpecRows(ProductVariant selectedVariant)
+    {
+        var rows = selectedVariant.VariantAttributes
+            .Select(variantAttribute => variantAttribute.AttributeOption)
+            .Where(option => option?.Attribute is not null)
+            .OrderBy(option => option!.Attribute!.Name)
+            .ThenBy(option => option!.Id)
+            .Select(option => new ProductTechnicalSpecRowViewModel
+            {
+                Label = option!.Attribute!.Name,
+                Value = string.IsNullOrWhiteSpace(option.Label) ? option.Value : option.Label,
+                IsHighlighted = true
+            })
+            .Where(row => !string.IsNullOrWhiteSpace(row.Value) && !IsColorSpecLabel(row.Label))
+            .DistinctBy(row => row.Label, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return rows;
+    }
+
+    private static bool IsColorSpecLabel(string label)
+    {
+        return label.Contains("màu", StringComparison.OrdinalIgnoreCase)
+            || label.Contains("color", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string BuildStockStatusText(ProductVariant variant)
+    {
+        return variant.Quantity > 0
+            ? "Còn hàng"
+            : "Hết hàng";
+    }
+
     private static IReadOnlyList<ProductDetailGalleryItemViewModel> BuildGalleryItems(
         ProductVariant selectedVariant,
+        IReadOnlyList<ProductVariant> colorVariants,
         string detailName)
     {
-        var galleryItems = selectedVariant.ProductVariantImages
-            .OrderBy(image => image.Position)
-            .ThenBy(image => image.Id)
-            .Select((image, index) => new ProductDetailGalleryItemViewModel
-            {
-                Label = $"Ảnh {index + 1}",
-                ImageUrl = NormalizeImageUrl(image.ImagePath),
-                ImageAlt = BuildImageAlt(image, detailName, selectedVariant)
-            })
+        var defaultVariant = colorVariants.FirstOrDefault(variant => variant.IsDefault)
+            ?? selectedVariant;
+        var orderedVariants = new[] { selectedVariant, defaultVariant }
+            .Concat(colorVariants.OrderBy(GetColorOrder).ThenBy(variant => variant.Id))
+            .DistinctBy(variant => variant.Id);
+
+        var galleryItems = orderedVariants
+            .SelectMany(variant => variant.ProductVariantImages
+                .OrderBy(image => image.Position)
+                .ThenBy(image => image.Id)
+                .Select((image, index) => new ProductDetailGalleryItemViewModel
+                {
+                    Label = BuildGalleryLabel(variant, index),
+                    ImageUrl = NormalizeImageUrl(image.ImagePath),
+                    ImageAlt = BuildImageAlt(image, detailName, variant)
+                }))
+            .DistinctBy(item => item.ImageUrl, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
         if (galleryItems.Count > 0)
@@ -327,6 +440,18 @@ public sealed class DbProductDetailDataService(EcommerceDbContext dbContext) : I
                 ImageAlt = detailName
             }
         ];
+    }
+
+    private static string BuildGalleryLabel(ProductVariant variant, int imageIndex)
+    {
+        if (string.IsNullOrWhiteSpace(variant.ColorName))
+        {
+            return $"Ảnh {imageIndex + 1}";
+        }
+
+        return imageIndex == 0
+            ? variant.ColorName
+            : $"{variant.ColorName} {imageIndex + 1}";
     }
 
     private static IReadOnlyList<ProductTechnicalSpecSectionViewModel> BuildTechnicalSpecSections(

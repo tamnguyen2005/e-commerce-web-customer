@@ -744,6 +744,52 @@
   padding-top: 12px;
 }
 
+.hero-member-card--signed-in {
+  display: grid;
+  align-self: start;
+  width: 100%;
+  min-height: 104px;
+  padding: 10px 12px 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.hero-account-summary {
+  min-width: 0;
+  padding-bottom: 4px;
+}
+
+.hero-account-name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: #18181b;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.22;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-account-name:hover {
+  color: var(--primary-600);
+}
+
+.hero-account-phone {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  color: #52525b;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.hero-account-eye {
+  width: 15px;
+  height: 15px;
+  color: #71717a;
+}
+
 .hero-member-intro {
   display: flex;
   align-items: center;

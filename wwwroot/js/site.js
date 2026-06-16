@@ -59,6 +59,39 @@
     });
   };
 
+  window.refreshCartCount = async function () {
+    try {
+      const response = await fetch('/Cart/Count', {
+        headers: { Accept: 'application/json' },
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+
+      if (!response.ok) return;
+
+      const result = await response.json();
+      const count = Number(result.count);
+
+      if (Number.isFinite(count)) {
+        window.updateCartCount(count);
+      }
+    } catch {
+      // Keep the existing badge state if the lightweight refresh fails.
+    }
+  };
+
+  const scheduleCartRefresh = () => {
+    window.refreshCartCount();
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleCartRefresh, { once: true });
+  } else {
+    scheduleCartRefresh();
+  }
+
+  window.addEventListener('pageshow', scheduleCartRefresh);
+
   // ============================================================
   // TOAST NOTIFICATIONS
   // Usage: window.showToast('Đã thêm vào giỏ hàng', 'success')

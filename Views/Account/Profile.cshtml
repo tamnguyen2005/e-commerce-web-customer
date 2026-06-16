@@ -1,1 +1,231 @@
 
+@model AccountProfilePageViewModel
+
+@{
+    ViewData["Title"] = "Tài khoản của tôi";
+    ViewData["MetaDescription"] = "Quản lý hồ sơ TechStore, lịch sử mua hàng và thông tin tài khoản.";
+}
+
+<section class="account-profile-page">
+    <div class="account-profile-shell">
+        <partial name="_AccountProfileHeader" model="Model.Summary" />
+
+        <div class="ap-layout">
+            <partial name="_AccountProfileSidebar" model="Model.ActiveTab" />
+
+            <div class="ap-main">
+                @if (Model.IsHistory)
+                {
+                    <section class="ap-panel ap-history-panel" aria-labelledby="profile-history-title">
+                        <nav class="ap-order-tabs" aria-label="Lọc đơn hàng">
+                            <a class="is-active" href="#profile-history-title">Tất cả</a>
+                            <span>Chờ xác nhận</span>
+                            <span>Đang xử lý</span>
+                            <span>Đang vận chuyển</span>
+                            <span>Đã nhận hàng</span>
+                            <span>Đã hủy</span>
+                        </nav>
+
+                        <div class="ap-history-toolbar">
+                            <h2 id="profile-history-title">Lịch sử mua hàng</h2>
+                            <div class="ap-date-range" aria-label="Khoảng thời gian">
+                                <span>01/12/2020</span>
+                                <svg aria-hidden="true"><use href="#profile-icon-arrow-right"></use></svg>
+                                <span>15/06/2026</span>
+                                <svg aria-hidden="true"><use href="#profile-icon-calendar"></use></svg>
+                            </div>
+                        </div>
+
+                        <div class="ap-order-list">
+                            @if (Model.Orders.Count == 0)
+                            {
+                                <div class="ap-empty-order">Bạn chưa có đơn hàng nào.</div>
+                            }
+                            @foreach (var order in Model.Orders)
+                            {
+                                <partial name="_ProfileOrderCard" model="order" />
+                            }
+                        </div>
+                    </section>
+                }
+                else if (Model.IsInfo)
+                {
+                    var phoneValue = string.IsNullOrWhiteSpace(Model.Summary.PhoneNumber) ? "-" : Model.Summary.PhoneNumber;
+                    var emailValue = string.IsNullOrWhiteSpace(Model.Summary.Email) ? "-" : Model.Summary.Email;
+
+                    <div class="ap-account-info-tab">
+                        @if (!Model.HasAddresses)
+                        {
+                            <div class="ap-address-prompt" role="status">
+                                <span class="ap-address-prompt-icon">
+                                    <svg aria-hidden="true"><use href="#profile-icon-info"></use></svg>
+                                </span>
+                                <strong>Thêm địa chỉ để đặt đơn hàng nhanh hơn.</strong>
+                                <button type="button">Thêm địa chỉ</button>
+                            </div>
+                        }
+
+                        <section class="ap-panel ap-info-card" aria-labelledby="profile-info-title">
+                            <div class="ap-card-title-row">
+                                <h2 id="profile-info-title">Thông tin cá nhân</h2>
+                                <button class="ap-red-action" type="button">
+                                    <svg aria-hidden="true"><use href="#profile-icon-edit"></use></svg>
+                                    Cập nhật
+                                </button>
+                            </div>
+
+                            <dl class="ap-personal-grid">
+                                <div>
+                                    <dt>Họ và tên:</dt>
+                                    <dd>@Model.Summary.FullName</dd>
+                                </div>
+                                <div>
+                                    <dt>Số điện thoại:</dt>
+                                    <dd>@phoneValue</dd>
+                                </div>
+                                <div>
+                                    <dt>Giới tính:</dt>
+                                    <dd>@Model.Summary.GenderText</dd>
+                                </div>
+                                <div>
+                                    <dt>Email:</dt>
+                                    <dd>@emailValue</dd>
+                                </div>
+                                <div>
+                                    <dt>Ngày sinh:</dt>
+                                    <dd>@Model.Summary.BirthDateText</dd>
+                                </div>
+                                <div>
+                                    <dt>Địa chỉ mặc định:</dt>
+                                    <dd>@Model.Summary.DefaultAddressText</dd>
+                                </div>
+                            </dl>
+                        </section>
+
+                        <section class="ap-panel ap-address-card" aria-labelledby="profile-address-title">
+                            <div class="ap-card-title-row">
+                                <h2 id="profile-address-title">Sổ địa chỉ</h2>
+                                <button class="ap-red-action" type="button">
+                                    <svg aria-hidden="true"><use href="#profile-icon-plus"></use></svg>
+                                    Thêm địa chỉ
+                                </button>
+                            </div>
+
+                            @if (Model.HasAddresses)
+                            {
+                                <div class="ap-address-list">
+                                    @foreach (var address in Model.Addresses)
+                                    {
+                                        <article class="ap-address-item @(address.IsDefault ? "is-default" : null)">
+                                            <div>
+                                                <h3>@address.ContactName</h3>
+                                                <p>@address.PhoneNumber</p>
+                                                <p>@address.AddressText</p>
+                                            </div>
+                                            @if (address.IsDefault)
+                                            {
+                                                <span>Mặc định</span>
+                                            }
+                                        </article>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="ap-address-empty">
+                                    <div class="ap-empty-illustration ap-empty-illustration--small">
+                                        <span class="ap-empty-bag">S</span>
+                                    </div>
+                                    <p>Bạn chưa có địa chỉ nào được tạo</p>
+                                </div>
+                            }
+                        </section>
+
+                        <div class="ap-info-bottom-grid">
+                            <section class="ap-panel ap-password-card" aria-labelledby="profile-password-title">
+                                <div class="ap-card-title-row">
+                                    <h2 id="profile-password-title">Mật khẩu</h2>
+                                    <button class="ap-red-action" type="button">
+                                        <svg aria-hidden="true"><use href="#profile-icon-edit"></use></svg>
+                                        Thay đổi mật khẩu
+                                    </button>
+                                </div>
+
+                                <dl class="ap-password-row">
+                                    <dt>Cập nhật lần cuối lúc:</dt>
+                                    <dd>@Model.Summary.PasswordUpdatedAtText</dd>
+                                </dl>
+                            </section>
+
+                            <section class="ap-panel ap-linked-card" aria-labelledby="profile-linked-title">
+                                <h2 id="profile-linked-title">Tài khoản liên kết</h2>
+                                <div class="ap-linked-list">
+                                    @foreach (var linkedAccount in Model.LinkedAccounts)
+                                    {
+                                        <div class="ap-linked-row">
+                                            <span class="ap-provider-logo ap-provider-logo--@linkedAccount.LogoClass">@linkedAccount.LogoText</span>
+                                            <strong>@linkedAccount.ProviderName</strong>
+                                            <button class="ap-red-action" type="button">
+                                                <svg aria-hidden="true"><use href="#profile-icon-link"></use></svg>
+                                                Liên kết
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="ap-overview-grid">
+                        <section class="ap-panel ap-recent-panel" aria-labelledby="recent-orders-title">
+                            <div class="ap-panel-title-row">
+                                <h2 id="recent-orders-title">Đơn hàng gần đây</h2>
+                                <a asp-controller="Account" asp-action="Profile" asp-route-tab="@AccountProfileTabs.History">
+                                    Xem tất cả
+                                    <svg aria-hidden="true"><use href="#profile-icon-chevron"></use></svg>
+                                </a>
+                            </div>
+
+                            <div class="ap-order-list ap-order-list--compact">
+                                @if (Model.RecentOrders.Count == 0)
+                                {
+                                    <div class="ap-empty-order">Bạn chưa có đơn hàng nào.</div>
+                                }
+                                @foreach (var order in Model.RecentOrders)
+                                {
+                                    <partial name="_ProfileOrderCard" model="order" />
+                                }
+                            </div>
+                        </section>
+
+                        <section class="ap-panel ap-offer-panel" aria-labelledby="profile-offer-title">
+                            <h2 id="profile-offer-title">Ưu đãi của bạn</h2>
+                            <div class="ap-empty-illustration">
+                                <span class="ap-empty-bag">S</span>
+                            </div>
+                            <p>Bạn chưa có ưu đãi nào. <a href="/deals">Xem sản phẩm</a></p>
+                        </section>
+                    </div>
+
+                    <section class="ap-panel ap-favorite-panel" aria-labelledby="profile-favorite-title">
+                        <h2 id="profile-favorite-title">Sản phẩm yêu thích</h2>
+                        <div class="ap-favorite-empty">
+                            <div class="ap-empty-illustration ap-empty-illustration--small">
+                                <span class="ap-empty-bag">S</span>
+                            </div>
+                            <p>Bạn chưa có sản phẩm nào yêu thích? Hãy bắt đầu mua sắm ngay nào! <a href="/catalog">Mua sắm ngay</a></p>
+                        </div>
+                    </section>
+                }
+            </div>
+        </div>
+    </div>
+
+    <partial name="_AccountProfileMobileNav" model="Model.ActiveTab" />
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/account-profile.css" asp-append-version="true" />
+}

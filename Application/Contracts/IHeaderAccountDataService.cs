@@ -7,5 +7,6 @@ public interface IHeaderAccountDataService
     Task<HeaderAccountViewModel> GetAccountAsync(
         string email,
         string displayName,
+        string? phoneNumber = null,
         CancellationToken cancellationToken = default);
 }

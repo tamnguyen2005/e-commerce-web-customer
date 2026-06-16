@@ -11,9 +11,14 @@
   const stickyProductName = page.querySelector('[data-sticky-product-name]');
   const stickyProductPrice = page.querySelector('[data-sticky-product-price]');
   const stickyPrice = page.querySelector('[data-sticky-price]');
+  const stockStatus = page.querySelector('[data-stock-status]');
+  const stockStatusText = page.querySelector('[data-stock-status-text]');
+  const stockStatusNote = page.querySelector('[data-stock-status-note]');
   const specModal = page.querySelector('[data-spec-modal]');
   const specModalContent = specModal?.querySelector('[data-spec-modal-content]');
   const reviewModal = page.querySelector('[data-review-modal]');
+  const galleryModal = page.querySelector('[data-gallery-modal]');
+  const galleryModalImage = galleryModal?.querySelector('[data-gallery-modal-image]');
   const extraVersions = Array.from(page.querySelectorAll('[data-extra-version="true"]'));
   const thumbs = Array.from(page.querySelectorAll('[data-gallery-thumb]'));
   const cartActions = Array.from(page.querySelectorAll('[data-add-to-cart], [data-buy-now]'));
@@ -36,6 +41,11 @@
 
     if (event.target === reviewModal) {
       closeModal(reviewModal);
+      return;
+    }
+
+    if (event.target === galleryModal) {
+      closeModal(galleryModal);
       return;
     }
 
@@ -117,12 +127,34 @@
       return;
     }
 
+    if (event.target.closest('[data-gallery-open]')) {
+      openGalleryModal();
+      return;
+    }
+
+    if (event.target.closest('[data-gallery-close]')) {
+      closeModal(galleryModal);
+      return;
+    }
+
+    if (event.target.closest('[data-gallery-modal-prev]')) {
+      showGalleryItem(activeGalleryIndex - 1);
+      return;
+    }
+
+    if (event.target.closest('[data-gallery-modal-next]')) {
+      showGalleryItem(activeGalleryIndex + 1);
+      return;
+    }
+
     const colorOption = event.target.closest('[data-color-option]');
     if (colorOption) {
       setActiveButton('[data-color-option]', colorOption);
       updateMainImage(colorOption.dataset.image, colorOption.dataset.alt);
+      activateGalleryThumbByImage(colorOption.dataset.image);
       updateStickyProduct(colorOption.dataset.image, colorOption.dataset.colorName, colorOption.dataset.priceText);
       syncCartActionsFromColor(colorOption);
+      syncStockState(colorOption);
       syncVariantUrl(colorOption.dataset.detailUrl);
       return;
     }
@@ -141,10 +173,23 @@
   });
 
   document.addEventListener('keydown', (event) => {
+    if (galleryModal?.classList.contains('is-open')) {
+      if (event.key === 'ArrowLeft') {
+        showGalleryItem(activeGalleryIndex - 1);
+        return;
+      }
+
+      if (event.key === 'ArrowRight') {
+        showGalleryItem(activeGalleryIndex + 1);
+        return;
+      }
+    }
+
     if (event.key !== 'Escape') return;
 
     closeModal(specModal);
     closeModal(reviewModal);
+    closeModal(galleryModal);
   });
 
   specModalContent?.addEventListener('scroll', () => {
@@ -157,6 +202,7 @@
   }, { passive: true });
 
   setupStickyOrder();
+  syncStockState(page.querySelector('[data-color-option].is-active'));
 
   function setActiveButton(selector, activeButton) {
     page.querySelectorAll(selector).forEach((button) => {
@@ -174,6 +220,25 @@
 
     setActiveButton('[data-gallery-thumb]', thumb);
     updateMainImage(thumb.dataset.image, thumb.dataset.alt);
+    thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+
+  function openGalleryModal() {
+    syncGalleryModalImage(
+      mainImage?.getAttribute('src') || '',
+      mainImage?.getAttribute('alt') || ''
+    );
+    openModal(galleryModal);
+  }
+
+  function activateGalleryThumbByImage(src) {
+    if (!src) return;
+
+    const thumb = thumbs.find((item) => item.dataset.image === src);
+    if (!thumb) return;
+
+    activeGalleryIndex = Number(thumb.dataset.galleryIndex) || 0;
+    setActiveButton('[data-gallery-thumb]', thumb);
     thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
 
@@ -340,6 +405,38 @@
         || '';
       action.dataset.cartPrice = colorOption.dataset.price || action.dataset.cartPrice || '';
       action.dataset.cartUrl = colorOption.dataset.detailUrl || action.dataset.cartUrl || '';
+      action.dataset.cartAvailable = colorOption.dataset.isAvailable || action.dataset.cartAvailable || 'true';
+      action.dataset.cartStockStatus = colorOption.dataset.stockStatus || action.dataset.cartStockStatus || '';
+    });
+  }
+
+  function syncStockState(colorOption) {
+    if (!colorOption) return;
+
+    const isAvailable = colorOption.dataset.isAvailable !== 'false';
+    const status = colorOption.dataset.stockStatus || (isAvailable ? 'Còn hàng' : 'Hết hàng');
+    const variant = colorOption.dataset.variantLabel || colorOption.dataset.colorName || '';
+
+    page.classList.toggle('has-unavailable-variant', !isAvailable);
+    stockStatus?.classList.toggle('is-unavailable', !isAvailable);
+
+    if (stockStatusText) {
+      stockStatusText.textContent = isAvailable
+        ? status
+        : (variant ? `Hết hàng: ${variant}` : 'Hết hàng');
+    }
+
+    if (stockStatusNote) {
+      stockStatusNote.textContent = isAvailable
+        ? 'Sẵn sàng giao nhanh hoặc nhận tại cửa hàng.'
+        : 'Bạn vẫn có thể chọn biến thể này để xem ảnh và thông tin chi tiết.';
+    }
+
+    cartActions.forEach((action) => {
+      action.dataset.cartAvailable = isAvailable ? 'true' : 'false';
+      action.dataset.cartStockStatus = status;
+      action.classList.toggle('is-unavailable', !isAvailable);
+      action.setAttribute('aria-disabled', isAvailable ? 'false' : 'true');
     });
   }
 
@@ -351,6 +448,12 @@
 
   async function submitCartAction(action, endpoint, options = {}) {
     if (action.dataset.pending === 'true') return;
+
+    if (action.dataset.cartAvailable === 'false') {
+      const variant = action.dataset.cartVariant || 'Biến thể này';
+      window.showToast?.(`${variant} hiện đã hết hàng.`, 'info');
+      return;
+    }
 
     const payload = buildCartPayload(action);
     setActionBusy(action, true);
@@ -443,11 +546,22 @@
     }
   }
 
+  function syncGalleryModalImage(src, alt) {
+    if (!galleryModalImage || !src) return;
+
+    galleryModalImage.src = src;
+
+    if (alt) {
+      galleryModalImage.alt = alt;
+    }
+  }
+
   function updateMainImage(src, alt) {
     if (!mainImage || !src) return;
 
     mainImage.src = src;
     updateStickyProduct(src);
+    syncGalleryModalImage(src, alt);
 
     if (alt) {
       mainImage.alt = alt;

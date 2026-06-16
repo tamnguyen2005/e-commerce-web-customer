@@ -1,0 +1,34 @@
+@model string
+
+@{
+    var isOverview = string.Equals(Model, AccountProfileTabs.Overview, StringComparison.OrdinalIgnoreCase);
+    var isHistory = string.Equals(Model, AccountProfileTabs.History, StringComparison.OrdinalIgnoreCase);
+    var isInfo = string.Equals(Model, AccountProfileTabs.Info, StringComparison.OrdinalIgnoreCase);
+}
+
+<aside class="ap-sidebar" aria-label="Điều hướng tài khoản">
+    <nav class="ap-side-nav">
+        <a class="ap-side-link @(isOverview ? "is-active" : null)" asp-controller="Account" asp-action="Profile" asp-route-tab="@AccountProfileTabs.Overview">
+            <svg aria-hidden="true"><use href="#profile-icon-home"></use></svg>
+            Tổng quan
+        </a>
+        <a class="ap-side-link @(isHistory ? "is-active" : null)" asp-controller="Account" asp-action="Profile" asp-route-tab="@AccountProfileTabs.History">
+            <svg aria-hidden="true"><use href="#profile-icon-receipt"></use></svg>
+            Lịch sử mua hàng
+        </a>
+
+        <a class="ap-side-link @(isInfo ? "is-active" : null)" asp-controller="Account" asp-action="Profile" asp-route-tab="@AccountProfileTabs.Info">
+            <svg aria-hidden="true"><use href="#profile-icon-gear"></use></svg>
+            Thông tin tài khoản
+        </a>
+
+        <span class="ap-side-separator"></span>
+
+        <form asp-controller="Account" asp-action="Logout" method="post" class="ap-logout-form">
+            <button class="ap-side-link ap-logout-button" type="submit">
+                <svg aria-hidden="true"><use href="#profile-icon-logout"></use></svg>
+                Đăng xuất
+            </button>
+        </form>
+    </nav>
+</aside>

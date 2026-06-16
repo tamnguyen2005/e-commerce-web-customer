@@ -1,0 +1,29 @@
+@model AccountProfileOrderViewModel
+
+<article class="ap-order-card">
+    <div class="ap-order-meta">
+        <span>Đơn hàng: <strong>@Model.OrderCode</strong></span>
+        <i aria-hidden="true"></i>
+        <span>Ngày đặt hàng: <strong>@Model.OrderedDateText</strong></span>
+        <mark class="ap-order-status ap-order-status--@Model.StatusTone">@Model.StatusText</mark>
+    </div>
+
+    <div class="ap-order-body">
+        <img src="@Model.ProductImageUrl" alt="@Model.ProductImageAlt" width="48" height="48" loading="lazy" />
+        <div class="ap-order-product">
+            <h3>@Model.ProductName</h3>
+            <strong>@Model.ProductPriceText</strong>
+            @if (!string.IsNullOrWhiteSpace(Model.OtherItemsText))
+            {
+                <p>@Model.OtherItemsText</p>
+            }
+        </div>
+        <div class="ap-order-total">
+            <p>Tổng thanh toán: <strong>@Model.TotalText</strong></p>
+            <a href="@Model.DetailUrl">
+                Xem chi tiết
+                <svg aria-hidden="true"><use href="#profile-icon-chevron"></use></svg>
+            </a>
+        </div>
+    </div>
+</article>

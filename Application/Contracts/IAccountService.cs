@@ -40,4 +40,4 @@ public interface IAccountService
         CancellationToken cancellationToken = default);
 }
 
-public sealed record AccountProfile(string Email, string DisplayName);
+public sealed record AccountProfile(string Email, string DisplayName, string? PhoneNumber = null);
