@@ -13,6 +13,7 @@ public sealed class CheckoutController(
     ICartItemValidator cartItemValidator,
     ICartPersistenceService cartPersistenceService,
     ICartDemoDataProvider demoDataProvider,
+    ICheckoutPaymentMethodProvider paymentMethodProvider,
     IOrderService orderService) : Controller
 {
     private const string SuccessSessionKey = "checkout_success_order";
@@ -186,9 +187,14 @@ public sealed class CheckoutController(
             items = [];
         }
 
+        var paymentMethods = await paymentMethodProvider.GetActivePaymentMethodsAsync(
+            cancellationToken);
+
         return new CheckoutViewModel
         {
             Items = items,
+            PaymentMethods = paymentMethods,
+            PaymentMethodId = paymentMethods.FirstOrDefault()?.Id ?? 0,
             ShippingFee = 30_000m,
             Discount = 0m
         };
@@ -206,7 +212,7 @@ public sealed class CheckoutController(
             submittedModel.Province.Trim(),
             submittedModel.Ward.Trim(),
             BuildShippingDetail(submittedModel),
-            submittedModel.PaymentMethod.ToString(),
+            submittedModel.PaymentMethodId,
             submittedModel.Note?.Trim(),
             order.ShippingFee,
             order.Discount,
@@ -251,7 +257,9 @@ public sealed class CheckoutController(
             Email = submittedModel.Email?.Trim() ?? string.Empty,
             DeliveryAddress = BuildDeliveryAddress(submittedModel),
             ShippingMethodName = "Giao hàng nhanh",
-            PaymentMethodName = GetPaymentMethodName(submittedModel.PaymentMethod),
+            PaymentMethodName = GetPaymentMethodName(
+                submittedModel.PaymentMethodId,
+                order.PaymentMethods),
             PlacedAt = placedOrder.PlacedAt.ToString("HH:mm, dd/MM/yyyy"),
             EstimatedDeliveryDateText =
                 placedOrder.EstimatedDeliveryAt.ToString("dd/MM/yyyy"),
@@ -284,6 +292,7 @@ public sealed class CheckoutController(
         CheckoutViewModel source)
     {
         target.Items = source.Items;
+        target.PaymentMethods = source.PaymentMethods;
         target.ShippingFee = source.ShippingFee;
         target.Discount = source.Discount;
     }
@@ -392,15 +401,13 @@ public sealed class CheckoutController(
             : CheckoutViewModel.FormatPrice(0);
     }
 
-    private static string GetPaymentMethodName(PaymentMethod method)
+    private static string GetPaymentMethodName(
+        long paymentMethodId,
+        IReadOnlyCollection<CheckoutPaymentMethodViewModel> paymentMethods)
     {
-        return method switch
-        {
-            PaymentMethod.BankTransfer => "Chuyển khoản ngân hàng",
-            PaymentMethod.Momo => "Ví MoMo",
-            PaymentMethod.VnPay => "Cổng VNPay",
-            PaymentMethod.ZaloPay => "Ví ZaloPay",
-            _ => "Thanh toán khi nhận hàng"
-        };
+        return paymentMethods
+            .FirstOrDefault(method => method.Id == paymentMethodId)
+            ?.Name
+            ?? "Phương thức thanh toán";
     }
 }

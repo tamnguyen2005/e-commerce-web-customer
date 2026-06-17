@@ -1,6 +1,5 @@
 using System.Data;
 using System.Globalization;
-using System.Text;
 using e_commerce_web_customer.Application.Contracts;
 using e_commerce_web_customer.Application.Orders;
 using e_commerce_web_customer.Data;
@@ -26,7 +25,7 @@ public sealed class DbOrderService(EcommerceDbContext dbContext) : IOrderService
         {
             var user = await ResolveUserAsync(request.UserEmail, cancellationToken);
             var paymentMethod = await ResolvePaymentMethodAsync(
-                request.PaymentMethod,
+                request.PaymentMethodId,
                 cancellationToken);
             var orderLines = await ResolveOrderLinesAsync(
                 request.Items,
@@ -158,29 +157,13 @@ public sealed class DbOrderService(EcommerceDbContext dbContext) : IOrderService
     }
 
     private async Task<PaymentMethod> ResolvePaymentMethodAsync(
-        string requestedMethod,
+        long paymentMethodId,
         CancellationToken cancellationToken)
     {
-        var methods = await dbContext.PaymentMethods
-            .Where(method => method.IsActive)
-            .OrderBy(method => method.Id)
-            .ToListAsync(cancellationToken);
-        var requested = NormalizeText(requestedMethod);
-
-        var method = requested switch
-        {
-            "cod" => methods.FirstOrDefault(item =>
-                ContainsAny(NormalizeText(item.Name), "cod", "nhan hang")),
-            "banktransfer" => methods.FirstOrDefault(item =>
-                ContainsAny(NormalizeText(item.Name), "chuyen khoan", "napas", "noi dia")),
-            "momo" => methods.FirstOrDefault(item =>
-                ContainsAny(NormalizeText(item.Name), "momo")),
-            "vnpay" => methods.FirstOrDefault(item =>
-                ContainsAny(NormalizeText(item.Name), "vnpay")),
-            "zalopay" => methods.FirstOrDefault(item =>
-                ContainsAny(NormalizeText(item.Name), "zalopay")),
-            _ => null
-        };
+        var method = await dbContext.PaymentMethods
+            .FirstOrDefaultAsync(
+                item => item.Id == paymentMethodId && item.IsActive,
+                cancellationToken);
 
         return method
             ?? throw new OrderPlacementException(
@@ -277,36 +260,6 @@ public sealed class DbOrderService(EcommerceDbContext dbContext) : IOrderService
 
         throw new OrderPlacementException(
             "Không thể tạo mã đơn hàng. Vui lòng thử lại.");
-    }
-
-    private static string NormalizeText(string value)
-    {
-        var normalized = value.Normalize(NormalizationForm.FormD);
-        var builder = new StringBuilder(normalized.Length);
-
-        foreach (var character in normalized)
-        {
-            if (CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
-            {
-                builder.Append(character);
-            }
-        }
-
-        return builder
-            .ToString()
-            .Normalize(NormalizationForm.FormC)
-            .Replace('đ', 'd')
-            .Replace('Đ', 'D')
-            .Replace(" ", string.Empty)
-            .ToLowerInvariant();
-    }
-
-    private static bool ContainsAny(string value, params string[] keywords)
-    {
-        return keywords.Any(keyword =>
-            value.Contains(
-                keyword.Replace(" ", string.Empty),
-                StringComparison.OrdinalIgnoreCase));
     }
 
     private sealed record ResolvedOrderLine(

@@ -45,11 +45,12 @@ public sealed class CheckoutViewModel
     public string? Note { get; set; }
 
     // ── Payment ────────────────────────────────────────────────────
-    [Required(ErrorMessage = "Vui lòng chọn phương thức thanh toán.")]
-    public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cod;
+    [Range(1, long.MaxValue, ErrorMessage = "Vui lòng chọn phương thức thanh toán.")]
+    public long PaymentMethodId { get; set; }
 
     // ── Order summary (read-only, passed in from session/cart) ─────
     public IReadOnlyList<CheckoutItemViewModel> Items { get; set; } = [];
+    public IReadOnlyList<CheckoutPaymentMethodViewModel> PaymentMethods { get; set; } = [];
     public decimal ShippingFee { get; set; } = 30_000m;
     public decimal Discount { get; set; }
 
@@ -71,11 +72,10 @@ public sealed class CheckoutItemViewModel
     public int Quantity { get; init; } = 1;
 }
 
-public enum PaymentMethod
+public sealed class CheckoutPaymentMethodViewModel
 {
-    Cod,           // Cash on delivery
-    BankTransfer,  // Bank transfer
-    Momo,          // MoMo e-wallet
-    VnPay,         // VNPay gateway
-    ZaloPay        // ZaloPay
+    public long Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public string IconKey { get; init; } = "generic";
 }
