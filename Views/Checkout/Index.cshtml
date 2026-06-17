@@ -102,6 +102,7 @@
                                 <select asp-for="District"
                                         id="co-district"
                                         class="co-select @(ViewData.ModelState["District"]?.Errors.Count > 0 ? "is-invalid" : null)"
+                                        data-server-value="@Model.District"
                                         disabled>
                                     <option value="">-- Chọn Quận / Huyện --</option>
                                 </select>
@@ -116,6 +117,7 @@
                                 <select asp-for="Ward"
                                         id="co-ward"
                                         class="co-select @(ViewData.ModelState["Ward"]?.Errors.Count > 0 ? "is-invalid" : null)"
+                                        data-server-value="@Model.Ward"
                                         disabled>
                                     <option value="">-- Chọn Phường / Xã --</option>
                                 </select>
@@ -184,103 +186,75 @@
 
                     <div class="co-form-body">
                         <div class="co-payment-grid" role="radiogroup" aria-label="Chọn phương thức thanh toán">
+                            @if (Model.PaymentMethods.Count == 0)
+                            {
+                                <p class="co-payment-empty" role="alert">
+                                    Hiện chưa có phương thức thanh toán khả dụng.
+                                </p>
+                            }
+                            else
+                            {
+                                foreach (var method in Model.PaymentMethods)
+                                {
+                                    var inputId = $"pay-{method.Id}";
 
-                            @* COD *@
-                            <div class="co-payment-option">
-                                <input type="radio"
-                                       name="PaymentMethod"
-                                       id="pay-cod"
-                                       value="0"
-                                       @(Model.PaymentMethod == PaymentMethod.Cod ? "checked" : null) />
-                                <label for="pay-cod" class="co-payment-label">
-                                    <span class="co-payment-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none">
-                                            <path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"
-                                                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </span>
-                                    <span class="co-payment-name">Tiền mặt</span>
-                                    <span class="co-payment-sub">Thanh toán khi nhận hàng</span>
-                                </label>
-                            </div>
-
-                            @* Bank Transfer *@
-                            <div class="co-payment-option">
-                                <input type="radio"
-                                       name="PaymentMethod"
-                                       id="pay-bank"
-                                       value="1"
-                                       @(Model.PaymentMethod == PaymentMethod.BankTransfer ? "checked" : null) />
-                                <label for="pay-bank" class="co-payment-label">
-                                    <span class="co-payment-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none">
-                                            <path d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z"
-                                                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </span>
-                                    <span class="co-payment-name">Chuyển khoản</span>
-                                    <span class="co-payment-sub">Ngân hàng nội địa</span>
-                                </label>
-                            </div>
-
-                            @* MoMo *@
-                            <div class="co-payment-option">
-                                <input type="radio"
-                                       name="PaymentMethod"
-                                       id="pay-momo"
-                                       value="2"
-                                       @(Model.PaymentMethod == PaymentMethod.Momo ? "checked" : null) />
-                                <label for="pay-momo" class="co-payment-label">
-                                    <span class="co-payment-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 48 48" fill="none">
-                                            <rect width="48" height="48" rx="12" fill="#B0006D" />
-                                            <text x="24" y="31" text-anchor="middle" font-size="16" font-weight="800" fill="#fff" font-family="system-ui, sans-serif">MoMo</text>
-                                        </svg>
-                                    </span>
-                                    <span class="co-payment-name">MoMo</span>
-                                    <span class="co-payment-sub">Ví điện tử</span>
-                                </label>
-                            </div>
-
-                            @* VNPay *@
-                            <div class="co-payment-option">
-                                <input type="radio"
-                                       name="PaymentMethod"
-                                       id="pay-vnpay"
-                                       value="3"
-                                       @(Model.PaymentMethod == PaymentMethod.VnPay ? "checked" : null) />
-                                <label for="pay-vnpay" class="co-payment-label">
-                                    <span class="co-payment-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 48 48" fill="none">
-                                            <rect width="48" height="48" rx="12" fill="#005BAA" />
-                                            <text x="24" y="31" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="system-ui, sans-serif">VNPAY</text>
-                                        </svg>
-                                    </span>
-                                    <span class="co-payment-name">VNPay</span>
-                                    <span class="co-payment-sub">Cổng thanh toán</span>
-                                </label>
-                            </div>
-
-                            @* ZaloPay *@
-                            <div class="co-payment-option">
-                                <input type="radio"
-                                       name="PaymentMethod"
-                                       id="pay-zalopay"
-                                       value="4"
-                                       @(Model.PaymentMethod == PaymentMethod.ZaloPay ? "checked" : null) />
-                                <label for="pay-zalopay" class="co-payment-label">
-                                    <span class="co-payment-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 48 48" fill="none">
-                                            <rect width="48" height="48" rx="12" fill="#0068FF" />
-                                            <text x="24" y="31" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="system-ui, sans-serif">ZaloPay</text>
-                                        </svg>
-                                    </span>
-                                    <span class="co-payment-name">ZaloPay</span>
-                                    <span class="co-payment-sub">Ví điện tử</span>
-                                </label>
-                            </div>
-
+                                    <div class="co-payment-option">
+                                        <input type="radio"
+                                               name="PaymentMethodId"
+                                               id="@inputId"
+                                               value="@method.Id"
+                                               data-payment-kind="@method.IconKey"
+                                               @(Model.PaymentMethodId == method.Id ? "checked" : null) />
+                                        <label for="@inputId" class="co-payment-label">
+                                            <span class="co-payment-icon" aria-hidden="true">
+                                                @switch (method.IconKey)
+                                                {
+                                                    case "cod":
+                                                        <svg viewBox="0 0 24 24" fill="none">
+                                                            <path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"
+                                                                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                        break;
+                                                    case "banktransfer":
+                                                        <svg viewBox="0 0 24 24" fill="none">
+                                                            <path d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z"
+                                                                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                        break;
+                                                    case "momo":
+                                                        <svg viewBox="0 0 48 48" fill="none">
+                                                            <rect width="48" height="48" rx="12" fill="#B0006D" />
+                                                            <text x="24" y="31" text-anchor="middle" font-size="16" font-weight="800" fill="#fff" font-family="system-ui, sans-serif">MoMo</text>
+                                                        </svg>
+                                                        break;
+                                                    case "vnpay":
+                                                        <svg viewBox="0 0 48 48" fill="none">
+                                                            <rect width="48" height="48" rx="12" fill="#005BAA" />
+                                                            <text x="24" y="31" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="system-ui, sans-serif">VNPAY</text>
+                                                        </svg>
+                                                        break;
+                                                    case "zalopay":
+                                                        <svg viewBox="0 0 48 48" fill="none">
+                                                            <rect width="48" height="48" rx="12" fill="#0068FF" />
+                                                            <text x="24" y="31" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="system-ui, sans-serif">ZaloPay</text>
+                                                        </svg>
+                                                        break;
+                                                    default:
+                                                        <svg viewBox="0 0 24 24" fill="none">
+                                                            <path d="M2.25 8.25h19.5m-18 9h16.5a1.5 1.5 0 0 0 1.5-1.5v-7.5a1.5 1.5 0 0 0-1.5-1.5H3.75a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5Zm2.25-3h3.75"
+                                                                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                        break;
+                                                }
+                                            </span>
+                                            <span class="co-payment-name">@method.Name</span>
+                                            <span class="co-payment-sub">@method.Description</span>
+                                        </label>
+                                    </div>
+                                }
+                            }
                         </div>
+                        <span asp-validation-for="PaymentMethodId" class="co-field-error"></span>
 
                         @* COD info note *@
                         <div id="co-cod-info" class="co-cod-info" role="note" aria-live="polite">
@@ -375,6 +349,8 @@
 @* ════ Google Map Modal (portal at bottom of body) ════════════ *@
 <div id="co-map-modal"
      class="co-map-modal"
+     data-google-maps-config-url="/api/integrations/google-maps/config"
+     data-google-maps-reverse-geocode-url="/api/integrations/google-maps/reverse-geocode"
      role="dialog"
      aria-modal="true"
      aria-labelledby="co-map-modal-title"
@@ -392,21 +368,21 @@
             </button>
         </div>
 
-        <iframe id="co-map-iframe"
-                class="co-map-embed"
-                src="about:blank"
-                title="Google Maps — chọn địa chỉ giao hàng"
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"
-                allowfullscreen>
-        </iframe>
+        <div id="co-map-canvas"
+             class="co-map-embed"
+             role="application"
+             aria-label="Google Maps — chọn địa chỉ giao hàng">
+        </div>
 
         <div class="co-map-modal-footer">
+            <p id="co-map-status" class="co-map-status" role="status" aria-live="polite">
+                Nhấn vào bản đồ để chọn vị trí giao hàng.
+            </p>
             <button type="button"
-                    id="co-map-close-footer"
+                    id="co-map-use"
                     class="co-map-button"
-                    onclick="document.getElementById('co-map-close').click()">
-                Xác nhận vị trí
+                    disabled>
+                Dùng vị trí này
             </button>
         </div>
     </div>

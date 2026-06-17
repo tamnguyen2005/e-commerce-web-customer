@@ -8,7 +8,7 @@ public sealed record PlaceOrderRequest(
     string ShippingProvince,
     string ShippingWard,
     string ShippingDetail,
-    string PaymentMethod,
+    long PaymentMethodId,
     string? Note,
     decimal ShippingFee,
     decimal Discount,

@@ -14,6 +14,7 @@ using e_commerce_web_customer.Infrastructure.Catalog.Db;
 using e_commerce_web_customer.Infrastructure.Catalog.Mock;
 using e_commerce_web_customer.Infrastructure.Home.Db;
 using e_commerce_web_customer.Infrastructure.Home.Mock;
+using e_commerce_web_customer.Infrastructure.Integrations.GoogleMaps;
 using e_commerce_web_customer.Infrastructure.Navigation.Db;
 using e_commerce_web_customer.Infrastructure.Navigation.Mock;
 using e_commerce_web_customer.Infrastructure.Orders.Db;
@@ -30,6 +31,17 @@ namespace e_commerce_web_customer.Infrastructure.DependencyInjection;
 
 public static class StorefrontServiceCollectionExtensions
 {
+    public static IServiceCollection AddStorefrontIntegrations(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<GoogleMapsOptions>(
+            configuration.GetSection(GoogleMapsOptions.SectionName));
+        services.AddHttpClient<IGoogleMapsIntegration, GoogleMapsIntegration>();
+
+        return services;
+    }
+
     public static IServiceCollection AddMockStorefrontServices(
         this IServiceCollection services)
     {
@@ -45,6 +57,7 @@ public static class StorefrontServiceCollectionExtensions
         services.AddSingleton<IAccountOrderDetailProvider, MockAccountOrderDetailProvider>();
         services.AddSingleton<ICartDemoDataProvider, MockCartDemoDataProvider>();
         services.AddSingleton<ICartPersistenceService, NoOpCartPersistenceService>();
+        services.AddSingleton<ICheckoutPaymentMethodProvider, MockCheckoutPaymentMethodProvider>();
         services.AddSingleton<IOrderService, MockOrderService>();
         services.AddScoped<IAccountService, MockAccountService>();
         services.AddScoped<ICartItemValidator, MockCartItemValidator>();
@@ -84,6 +97,7 @@ public static class StorefrontServiceCollectionExtensions
         services.AddScoped<IAccountOrderDetailProvider, DbAccountOrderDetailProvider>();
         services.AddScoped<ICartDemoDataProvider, EmptyCartDemoDataProvider>();
         services.AddScoped<ICartPersistenceService, DbCartPersistenceService>();
+        services.AddScoped<ICheckoutPaymentMethodProvider, DbCheckoutPaymentMethodProvider>();
         services.AddScoped<IOrderService, DbOrderService>();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<IAccountService, DbAccountService>();

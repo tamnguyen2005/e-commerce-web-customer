@@ -4,6 +4,10 @@ using e_commerce_web_customer.Infrastructure.DependencyInjection;
 using e_commerce_web_customer.Infrastructure.Web;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddJsonFile(
+    "appsettings.GoogleMaps.json",
+    optional: true,
+    reloadOnChange: true);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -19,6 +23,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ISessionStorage, WebSessionStorage>();
 builder.Services.AddScoped<CartSessionService>();
+builder.Services.AddStorefrontIntegrations(builder.Configuration);
 
 var useMockData = builder.Configuration.GetValue<bool>("DatabaseSettings:UseMockData", true);
 if (useMockData)
@@ -46,6 +51,7 @@ app.UseSession();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "default",
